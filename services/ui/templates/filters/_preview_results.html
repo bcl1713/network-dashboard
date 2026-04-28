@@ -1,0 +1,28 @@
+<div class="preview-result">
+  <p>
+    <strong>{{ preview.match_count }}</strong> match{{ '' if preview.match_count == 1 else 'es' }}
+    out of {{ preview.scanned }} recent events.
+    {% if rule and rule.action == 'hide' and preview.match_count > 25 %}
+    <span class="warn">⚠️ This rule would hide many events. Reconsider scope or use <code>tag</code> first.</span>
+    {% endif %}
+  </p>
+  {% if preview.samples %}
+  <table class="table">
+    <thead><tr><th>Time</th><th>Event</th><th>Source</th><th>Destination</th><th>SID</th><th>Signature</th></tr></thead>
+    <tbody>
+      {% for s in preview.samples %}
+      <tr>
+        <td>{{ s.timestamp }}</td>
+        <td><a href="/events/{{ s.event_id }}">{{ s.event_id[:12] }}…</a></td>
+        <td>{{ s.src_ip or '-' }}</td>
+        <td>{{ s.dest_ip or '-' }}</td>
+        <td>{{ s.sid or '-' }}</td>
+        <td>{{ s.signature or '-' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No samples to show.</p>
+  {% endif %}
+</div>

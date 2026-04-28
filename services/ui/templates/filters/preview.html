@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Preview filter #{{ rule.id }}{% endblock %}
+{% block content %}
+<h1>Preview filter #{{ rule.id }}</h1>
+<p><a href="/filters/{{ rule.id }}">&larr; back to filter</a></p>
+<div class="rule-summary">
+  <strong>{{ rule.name }}</strong>
+  &middot; action <span class="action action-{{ rule.action }}">{{ rule.action }}</span>
+  &middot; SID {{ rule.sid or "any" }}
+  &middot; host {{ rule.source_host or rule.source_subnet or "any" }}
+</div>
+
+{% include "filters/_preview_results.html" %}
+{% endblock %}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Suricata Filter UI{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <script src="/static/js/htmx.min.js" defer></script>
+  <script src="/static/js/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a href="/" class="brand">Suricata Filter UI</a>
+    <nav>
+      <a href="/">Overview</a>
+      <a href="/filters">Filters</a>
+      <a href="/filters?include_retired=true">Retired</a>
+      <a href="/filters/new">New filter</a>
+    </nav>
+  </header>
+  <main>
+    <div id="flash"></div>
+    {% block content %}{% endblock %}
+  </main>
+  <div id="modal"></div>
+</body>
+</html>

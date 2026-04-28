@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Filters{% endblock %}
+{% block content %}
+<h1>Filters</h1>
+<form method="get" action="/filters" class="filter-search">
+  <input type="search" name="q" value="{{ q }}" placeholder="search by name, description, notes">
+  <label><input type="checkbox" name="include_retired" value="true" {% if include_retired %}checked{% endif %}> include retired</label>
+  <button type="submit">Apply</button>
+  <a class="button" href="/filters/new">New filter</a>
+</form>
+
+{% include "filters/_table.html" %}
+{% endblock %}

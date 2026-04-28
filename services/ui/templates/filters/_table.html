@@ -1,0 +1,23 @@
+<table class="table" id="filters-table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Name</th>
+      <th>Match</th>
+      <th>Action</th>
+      <th>State</th>
+      <th>Hits</th>
+      <th>Last seen</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% if rules %}
+      {% for rule in rules %}
+        {% include "filters/_row.html" %}
+      {% endfor %}
+    {% else %}
+      <tr><td colspan="8" class="muted">No filters yet. <a href="/filters/new">Create one.</a></td></tr>
+    {% endif %}
+  </tbody>
+</table>
