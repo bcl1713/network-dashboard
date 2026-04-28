@@ -23,7 +23,7 @@ services:
     volumes:
       - ./data/engine:/data
     ports:
-      - "${ENGINE_HOST_PORT:-8081}:8000"
+      - "10.10.50.13:${ENGINE_HOST_PORT:-8081}:8000"
     networks: [idsnet]
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/healthz"]
@@ -47,7 +47,7 @@ services:
       UI_PAGE_SIZE: ${UI_PAGE_SIZE:-50}
       TZ: ${TZ:-UTC}
     ports:
-      - "${UI_HOST_PORT:-8082}:8000"
+      - "10.10.50.13:${UI_HOST_PORT:-8082}:8000"
     networks: [idsnet]
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/healthz"]
@@ -69,8 +69,8 @@ services:
       - ./fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf:ro
       - ./data/raw-eve:/raw
     ports:
-      - "${FLUENTBIT_SYSLOG_PORT:-5140}:5140/tcp"
-      - "${FLUENTBIT_METRICS_PORT:-2020}:2020"
+      - "10.10.50.13:${FLUENTBIT_SYSLOG_PORT:-5140}:5140/tcp"
+      - "10.10.50.13:${FLUENTBIT_METRICS_PORT:-2020}:2020"
     networks: [idsnet]
     depends_on:
       engine:
@@ -84,10 +84,11 @@ services:
       - ./loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
       - ./data/loki:/loki
     ports:
-      - "${LOKI_HOST_PORT:-3100}:3100"
+      - "10.10.50.13:${LOKI_HOST_PORT:-3100}:3100"
     networks: [idsnet]
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3100/ready | grep -q ready"]
+      test:
+        ["CMD-SHELL", "wget -qO- http://localhost:3100/ready | grep -q ready"]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -106,10 +107,11 @@ services:
       - ./grafana/provisioning/dashboards/json:/var/lib/grafana/dashboards:ro
       - ./data/grafana:/var/lib/grafana
     ports:
-      - "${GRAFANA_HOST_PORT:-3000}:3000"
+      - "10.10.50.13:${GRAFANA_HOST_PORT:-3000}:3000"
     networks: [idsnet]
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health | grep -q ok"]
+      test:
+        ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health | grep -q ok"]
       interval: 15s
       timeout: 5s
       retries: 10
