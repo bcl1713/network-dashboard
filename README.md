@@ -62,19 +62,20 @@ Override host ports per environment via `.env` (`ENGINE_HOST_PORT`, etc.).
 
 ## OPNsense setup
 
-Configure Suricata on OPNsense to log EVE JSON, then forward to this host's
-Fluent Bit syslog input:
+Enable EVE JSON logging in Suricata (**Services → Intrusion Detection →
+Administration → Settings**), then add a remote syslog target (**System →
+Settings → Logging → Targets**):
 
-- System -> Settings -> Logging / Targets -> add a remote target:
-  - Transport: TCP
-  - Hostname: `10.10.50.2`
-  - Port: `5140`
-  - Facility: local0 (or whichever you prefer)
-  - Application: select Suricata
-  - Format: RFC 5424
+| Field | Value |
+|---|---|
+| Transport | TCP(4) |
+| Hostname / IP | IP of this machine |
+| Port | `5140` |
+| Application | `suricata` |
+| Format | RFC 5424 |
 
-The engine treats whatever Fluent Bit hands it as JSON, so make sure OPNsense
-ships the raw EVE JSON line as the syslog message.
+See [`docs/opnsense-setup.md`](docs/opnsense-setup.md) for the full walkthrough,
+verification steps, and troubleshooting.
 
 ## Repository layout
 
@@ -87,10 +88,11 @@ infra/data/           gitignored bind volumes (engine SQLite, Loki, Grafana, raw
 tools/                synth_eve, post_eve, load_test
 ```
 
-See [`docs/architecture.md`](docs/architecture.md) for component
-responsibilities, [`docs/filter-rules.md`](docs/filter-rules.md) for matching
-order and examples, and [`docs/runbook.md`](docs/runbook.md) for restart and
-restore procedures.
+See [`docs/opnsense-setup.md`](docs/opnsense-setup.md) for the full OPNsense
+configuration walkthrough, [`docs/architecture.md`](docs/architecture.md) for
+component responsibilities, [`docs/filter-rules.md`](docs/filter-rules.md) for
+matching order and examples, and [`docs/runbook.md`](docs/runbook.md) for
+restart and restore procedures.
 
 ## Development
 
