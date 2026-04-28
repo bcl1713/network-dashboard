@@ -1,182 +1,88 @@
 <div id="form-fields" class="form-grid">
   <label>
     Name
-    <input
-      type="text"
-      name="name"
-      value="{{ rule.name | default('', true) }}"
-      required
-    />
+    <input type="text" name="name" value="{{ rule.name | default('', true) }}" required>
   </label>
 
   <label>
     Action
     <select name="action">
       {% for opt in ['tag','hide','allow'] %}
-      <option
-        value="{{ opt }}"
-        {%
-        if
-        rule.action=""
-        ="opt"
-        %}selected{%
-        endif
-        %}
-      >
-        {{ opt }}
-      </option>
+        <option value="{{ opt }}" {{ 'selected' if rule.action == opt else '' }}>{{ opt }}</option>
       {% endfor %}
     </select>
-    <span class="hint small"
-      >Default to <code>tag</code>; switch to <code>hide</code> only after
-      running a preview.</span
-    >
+    <span class="hint small">Default to <code>tag</code>; switch to <code>hide</code> only after running a preview.</span>
   </label>
 
   <label class="span-2">
     Description
-    <input
-      type="text"
-      name="description"
-      value="{{ rule.description | default('', true) }}"
-    />
+    <input type="text" name="description" value="{{ rule.description | default('', true) }}">
   </label>
 
   <label>
     Source host
-    <input
-      type="text"
-      name="source_host"
-      value="{{ rule.source_host | default('', true) }}"
-      placeholder="10.10.50.42"
-    />
+    <input type="text" name="source_host" value="{{ rule.source_host | default('', true) }}" placeholder="10.10.50.42">
   </label>
   <label>
     Source subnet
-    <input
-      type="text"
-      name="source_subnet"
-      value="{{ rule.source_subnet | default('', true) }}"
-      placeholder="10.10.50.0/24"
-    />
+    <input type="text" name="source_subnet" value="{{ rule.source_subnet | default('', true) }}" placeholder="10.10.50.0/24">
   </label>
 
   <label>
     SID
-    <input
-      type="number"
-      name="sid"
-      value="{{ rule.sid | default('', true) }}"
-    />
+    <input type="number" name="sid" value="{{ rule.sid | default('', true) }}">
   </label>
   <label>
     Generator ID
-    <input
-      type="number"
-      name="generator_id"
-      value="{{ rule.generator_id | default('', true) }}"
-    />
+    <input type="number" name="generator_id" value="{{ rule.generator_id | default('', true) }}">
   </label>
 
   <label>
     Destination
-    <input
-      type="text"
-      name="destination"
-      value="{{ rule.destination | default('', true) }}"
-      placeholder="1.2.3.4"
-    />
+    <input type="text" name="destination" value="{{ rule.destination | default('', true) }}" placeholder="1.2.3.4">
   </label>
   <label>
     Destination subnet
-    <input
-      type="text"
-      name="destination_subnet"
-      value="{{ rule.destination_subnet | default('', true) }}"
-    />
+    <input type="text" name="destination_subnet" value="{{ rule.destination_subnet | default('', true) }}">
   </label>
   <label>
     Destination port
-    <input
-      type="number"
-      name="destination_port"
-      value="{{ rule.destination_port | default('', true) }}"
-    />
+    <input type="number" name="destination_port" value="{{ rule.destination_port | default('', true) }}">
   </label>
   <label>
     Protocol
-    <input
-      type="text"
-      name="protocol"
-      value="{{ rule.protocol | default('', true) }}"
-      placeholder="tcp"
-    />
+    <input type="text" name="protocol" value="{{ rule.protocol | default('', true) }}" placeholder="tcp">
   </label>
 
   <label class="span-2">
     Message match
-    <input
-      type="text"
-      name="message_match"
-      value="{{ rule.message_match | default('', true) }}"
-    />
+    <input type="text" name="message_match" value="{{ rule.message_match | default('', true) }}">
   </label>
   <label>
     Match mode
     <select name="match_mode">
       {% for opt in ['exact','contains','regex'] %}
-      <option
-        value="{{ opt }}"
-        {%
-        if
-        rule.match_mode=""
-        ="opt"
-        %}selected{%
-        endif
-        %}
-      >
-        {{ opt }}
-      </option>
+        <option value="{{ opt }}" {{ 'selected' if rule.match_mode == opt else '' }}>{{ opt }}</option>
       {% endfor %}
     </select>
   </label>
 
   <label class="span-2">
     Tags (comma-separated)
-    <input
-      type="text"
-      name="tags"
-      value="{% if rule.tags %}{{ rule.tags | join(', ') if rule.tags is iterable and rule.tags is not string else rule.tags }}{% endif %}"
-    />
+    <input type="text" name="tags" value="{% if rule.tags %}{{ rule.tags | join(', ') if rule.tags is iterable and rule.tags is not string else rule.tags }}{% endif %}">
   </label>
 
   <label class="span-2">
     Notes
-    <textarea name="notes" rows="3">
-{{ rule.notes | default('', true) }}</textarea
-    >
+    <textarea name="notes" rows="3">{{ rule.notes | default('', true) }}</textarea>
   </label>
 
   <label>
-    <input
-      type="checkbox"
-      name="enabled"
-      {%
-      if
-      rule.enabled
-      %}checked{%
-      endif
-      %}
-    />
+    <input type="checkbox" name="enabled" {{ 'checked' if rule.enabled else '' }}>
     Enabled
   </label>
   <label>
     Expires at (ISO)
-    <input
-      type="text"
-      name="expires_at"
-      value="{{ rule.expires_at | default('', true) }}"
-      placeholder="2026-12-31T00:00:00+00:00"
-    />
+    <input type="text" name="expires_at" value="{{ rule.expires_at | default('', true) }}" placeholder="2026-12-31T00:00:00+00:00">
   </label>
 </div>
