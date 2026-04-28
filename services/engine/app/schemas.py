@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 Action = Literal["tag", "hide", "allow"]
 MatchMode = Literal["exact", "contains", "regex"]
@@ -34,6 +34,13 @@ class FilterBase(BaseModel):
     expires_at: datetime | None = None
     notes: str | None = None
     created_by: str | None = None
+
+    @field_validator("expires_at", mode="before")
+    @classmethod
+    def _coerce_expires_at(cls, v: Any) -> Any:
+        if isinstance(v, str) and (v == "" or v == "None"):
+            return None
+        return v
 
     @model_validator(mode="after")
     def _exclusive_host_subnet(self):
