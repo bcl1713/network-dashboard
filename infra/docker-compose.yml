@@ -68,6 +68,7 @@ services:
       - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
       - ./fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf:ro
       - ./data/raw-eve:/raw
+      - ./GeoLite2-City.mmdb:/etc/fluent-bit/GeoLite2-City.mmdb:ro
     ports:
       - "10.10.50.13:${FLUENTBIT_SYSLOG_PORT:-5140}:5140/tcp"
       - "10.10.50.13:${FLUENTBIT_METRICS_PORT:-2020}:2020"

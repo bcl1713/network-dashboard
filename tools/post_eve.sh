@@ -13,7 +13,7 @@ if [[ $# -lt 1 ]]; then
 fi
 
 event_file=$1
-engine_url=${2:-http://localhost:8081}
+engine_url=${2:-http://10.10.50.13:8081}
 
 if [[ -z "${ENGINE_API_TOKEN:-}" ]]; then
   if [[ -f .env ]]; then
