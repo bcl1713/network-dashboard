@@ -40,6 +40,9 @@ infra/backups/snapshots/
 # Vendored at build time by services/ui/Dockerfile, fetched on demand by tests.
 services/ui/static/js/htmx.min.js
 
+# GeoLite Database
+GeoLite2-City.mmdb
+
 # Editor
 .idea/
 .vscode/
