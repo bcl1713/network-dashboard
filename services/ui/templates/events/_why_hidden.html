@@ -1,0 +1,26 @@
+<div id="why-hidden">
+{% if why %}
+  <p>Decision: <span class="action action-{{ why.decision.action }}">{{ why.decision.action }}</span>
+    {% if why.decision.filter_id %}(filter #{{ why.decision.filter_id }}){% endif %}
+  </p>
+  {% if why.chain %}
+    <table class="table">
+      <thead><tr><th>Filter</th><th>Action</th><th>Matched?</th><th>Matched fields</th></tr></thead>
+      <tbody>
+        {% for step in why.chain %}
+        <tr>
+          <td><a href="/filters/{{ step.filter_id }}">#{{ step.filter_id }} {{ step.name }}</a></td>
+          <td><span class="action action-{{ step.action }}">{{ step.action }}</span></td>
+          <td>{% if step.matched %}yes{% else %}no{% endif %}</td>
+          <td><code>{{ step.matched_fields | tojson }}</code></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="muted">No filters considered this event.</p>
+  {% endif %}
+{% else %}
+  <p class="muted">why-hidden unavailable.</p>
+{% endif %}
+</div>

@@ -1,0 +1,48 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "barchart",
+      "title": "Events by source host (selected window)",
+      "id": 1,
+      "gridPos": {"x": 0, "y": 0, "w": 24, "h": 10},
+      "datasource": {"type": "loki", "uid": "Loki-Filtered"},
+      "targets": [
+        {"expr": "sum by (host) (count_over_time({job=\"suricata\"}[$__range]))", "refId": "A"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Events per minute by host",
+      "id": 2,
+      "gridPos": {"x": 0, "y": 10, "w": 24, "h": 10},
+      "datasource": {"type": "loki", "uid": "Loki-Filtered"},
+      "targets": [
+        {"expr": "sum by (host) (rate({job=\"suricata\"}[1m]))", "refId": "A", "legendFormat": "{{host}}"}
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Top hosts (last 24h)",
+      "id": 3,
+      "gridPos": {"x": 0, "y": 20, "w": 24, "h": 10},
+      "datasource": {"type": "loki", "uid": "Loki-Filtered"},
+      "targets": [
+        {"expr": "topk(20, sum by (host) (count_over_time({job=\"suricata\"}[24h])))", "refId": "A", "instant": true}
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["ids", "suricata"],
+  "templating": {"list": []},
+  "time": {"from": "now-24h", "to": "now"},
+  "title": "IDS by Host",
+  "uid": "ids-by-host",
+  "version": 1
+}

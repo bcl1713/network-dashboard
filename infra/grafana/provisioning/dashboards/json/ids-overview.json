@@ -1,0 +1,88 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Events accepted (last 5m)",
+      "id": 1,
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+      "datasource": {"type": "loki", "uid": "Loki-Filtered"},
+      "targets": [
+        {"expr": "sum(count_over_time({job=\"suricata\"}[5m]))", "refId": "A", "queryType": "instant"}
+      ],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "value", "graphMode": "area"}
+    },
+    {
+      "type": "stat",
+      "title": "Events accepted (last 24h)",
+      "id": 2,
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+      "datasource": {"type": "loki", "uid": "Loki-Filtered"},
+      "targets": [
+        {"expr": "sum(count_over_time({job=\"suricata\"}[24h]))", "refId": "A", "queryType": "instant"}
+      ],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "value", "graphMode": "area"}
+    },
+    {
+      "type": "stat",
+      "title": "Tagged events (last 24h)",
+      "id": 3,
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+      "datasource": {"type": "loki", "uid": "Loki-Filtered"},
+      "targets": [
+        {"expr": "sum(count_over_time({job=\"suricata\", action=\"tag\"}[24h]))", "refId": "A", "queryType": "instant"}
+      ],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "value", "graphMode": "area"}
+    },
+    {
+      "type": "stat",
+      "title": "Unique SIDs (last 24h)",
+      "id": 4,
+      "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+      "datasource": {"type": "loki", "uid": "Loki-Filtered"},
+      "targets": [
+        {"expr": "count(count by (sid) (count_over_time({job=\"suricata\"}[24h])))", "refId": "A", "queryType": "instant"}
+      ],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "value", "graphMode": "none"}
+    },
+    {
+      "type": "timeseries",
+      "title": "Events per minute",
+      "id": 10,
+      "gridPos": {"x": 0, "y": 4, "w": 24, "h": 8},
+      "datasource": {"type": "loki", "uid": "Loki-Filtered"},
+      "targets": [
+        {"expr": "sum by (action) (rate({job=\"suricata\"}[1m]))", "refId": "A", "legendFormat": "{{action}}"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}}
+    },
+    {
+      "type": "logs",
+      "title": "Recent events",
+      "id": 20,
+      "gridPos": {"x": 0, "y": 12, "w": 24, "h": 12},
+      "datasource": {"type": "loki", "uid": "Loki-Filtered"},
+      "targets": [
+        {"expr": "{job=\"suricata\"} | json", "refId": "A"}
+      ],
+      "options": {"showLabels": true, "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending"}
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["ids", "suricata"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "timepicker": {},
+  "timezone": "",
+  "title": "IDS Overview",
+  "uid": "ids-overview",
+  "version": 1,
+  "weekStart": ""
+}

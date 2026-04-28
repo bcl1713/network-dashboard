@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-04-27T19:14:32.123456+0000",
+  "flow_id": 1234567890123456,
+  "in_iface": "igb1",
+  "event_type": "alert",
+  "src_ip": "10.10.50.42",
+  "src_port": 51514,
+  "dest_ip": "149.154.167.41",
+  "dest_port": 443,
+  "proto": "TCP",
+  "host": "opnsense.local",
+  "alert": {
+    "action": "allowed",
+    "gid": 1,
+    "signature_id": 2027865,
+    "rev": 4,
+    "signature": "ET POLICY Telegram Outbound Bot API",
+    "category": "Potentially Bad Traffic",
+    "severity": 2
+  },
+  "geoip": {
+    "country_name": "United Kingdom",
+    "city_name": "London"
+  }
+}

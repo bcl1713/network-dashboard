@@ -1,0 +1,35 @@
+<tr id="filter-row-{{ rule.id }}" class="{% if rule.retired %}row-retired{% elif not rule.enabled %}row-disabled{% endif %}">
+  <td>{{ rule.id }}</td>
+  <td><a href="/filters/{{ rule.id }}">{{ rule.name }}</a>{% if rule.description %}<div class="muted small">{{ rule.description }}</div>{% endif %}</td>
+  <td class="match-cell">
+    {% if rule.source_host %}<span class="chip">host {{ rule.source_host }}</span>{% endif %}
+    {% if rule.source_subnet %}<span class="chip">net {{ rule.source_subnet }}</span>{% endif %}
+    {% if rule.sid %}<span class="chip">SID {{ rule.sid }}</span>{% endif %}
+    {% if rule.destination %}<span class="chip">dst {{ rule.destination }}</span>{% endif %}
+    {% if rule.destination_subnet %}<span class="chip">dstnet {{ rule.destination_subnet }}</span>{% endif %}
+    {% if rule.destination_port %}<span class="chip">:{{ rule.destination_port }}</span>{% endif %}
+    {% if rule.protocol %}<span class="chip">{{ rule.protocol }}</span>{% endif %}
+    {% if rule.message_match %}<span class="chip">msg {{ rule.match_mode }}</span>{% endif %}
+  </td>
+  <td><span class="action action-{{ rule.action }}">{{ rule.action }}</span></td>
+  <td>
+    {% if rule.retired %}<span class="state state-retired">retired</span>
+    {% elif rule.enabled %}<span class="state state-enabled">enabled</span>
+    {% else %}<span class="state state-disabled">disabled</span>{% endif %}
+  </td>
+  <td>{{ rule.hit_count }}</td>
+  <td>{{ rule.last_seen_at or "-" }}</td>
+  <td class="actions">
+    {% if not rule.retired %}
+      {% if rule.enabled %}
+        <button hx-post="/htmx/filters/{{ rule.id }}/lifecycle" hx-vals='{"action":"disable"}' hx-target="#filter-row-{{ rule.id }}" hx-swap="outerHTML">Disable</button>
+      {% else %}
+        <button hx-post="/htmx/filters/{{ rule.id }}/lifecycle" hx-vals='{"action":"enable"}' hx-target="#filter-row-{{ rule.id }}" hx-swap="outerHTML">Enable</button>
+      {% endif %}
+      <button hx-post="/htmx/filters/{{ rule.id }}/lifecycle" hx-vals='{"action":"retire"}' hx-target="#filter-row-{{ rule.id }}" hx-swap="outerHTML" hx-confirm="Retire this filter? It will be excluded from classification.">Retire</button>
+    {% else %}
+      <button hx-post="/htmx/filters/{{ rule.id }}/lifecycle" hx-vals='{"action":"unretire"}' hx-target="#filter-row-{{ rule.id }}" hx-swap="outerHTML">Unretire</button>
+    {% endif %}
+    <a class="button" href="/filters/{{ rule.id }}/preview">Preview</a>
+  </td>
+</tr>

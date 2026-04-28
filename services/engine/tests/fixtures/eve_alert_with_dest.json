@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-04-27T19:15:01.987654+0000",
+  "flow_id": 9876543210987654,
+  "event_type": "alert",
+  "src_ip": "10.10.60.17",
+  "src_port": 33344,
+  "dest_ip": "8.8.8.8",
+  "dest_port": 53,
+  "proto": "UDP",
+  "host": "opnsense.local",
+  "alert": {
+    "gid": 1,
+    "signature_id": 2010935,
+    "rev": 7,
+    "signature": "ET POLICY Public DNS Query",
+    "severity": 3
+  },
+  "geoip": {
+    "country_name": "United States",
+    "city_name": "Mountain View"
+  }
+}

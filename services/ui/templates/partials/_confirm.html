@@ -1,0 +1,9 @@
+<div class="modal">
+  <div class="modal-body">
+    <p>{{ message }}</p>
+    <div class="modal-actions">
+      <button onclick="document.getElementById('modal').innerHTML = ''">Cancel</button>
+      <button hx-post="{{ confirm_url }}" hx-swap="none">{{ confirm_label | default('Confirm') }}</button>
+    </div>
+  </div>
+</div>

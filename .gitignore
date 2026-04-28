@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# SQLite
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Local env
+.env
+.env.local
+*.local
+
+# Runtime data (bind volumes)
+infra/data/engine/*
+!infra/data/engine/.gitkeep
+infra/data/loki/*
+!infra/data/loki/.gitkeep
+infra/data/grafana/*
+!infra/data/grafana/.gitkeep
+infra/data/raw-eve/*
+!infra/data/raw-eve/.gitkeep
+infra/backups/*.sqlite*
+infra/backups/snapshots/
+
+# Vendored at build time by services/ui/Dockerfile, fetched on demand by tests.
+services/ui/static/js/htmx.min.js
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store

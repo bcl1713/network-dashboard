@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Event {{ event.event_id[:12] }}{% endblock %}
+{% block content %}
+<h1>Event {{ event.event_id }}</h1>
+<p><a class="button" href="/filters/new?from_event={{ event.event_id }}">Create safe filter from this event</a></p>
+
+<table class="table summary">
+  <tr><th>Time</th><td>{{ event.timestamp }}</td></tr>
+  <tr><th>Type</th><td>{{ event.event_type }}</td></tr>
+  <tr><th>Source</th><td>{{ event.src_ip }}{% if event.src_port %}:{{ event.src_port }}{% endif %}</td></tr>
+  <tr><th>Destination</th><td>{{ event.dest_ip }}{% if event.dest_port %}:{{ event.dest_port }}{% endif %}</td></tr>
+  <tr><th>Protocol</th><td>{{ event.proto or '-' }}</td></tr>
+  <tr><th>SID</th><td>{{ event.sid or '-' }} (gid {{ event.generator_id or '-' }})</td></tr>
+  <tr><th>Signature</th><td>{{ event.signature or '-' }}</td></tr>
+  <tr><th>Severity</th><td>{{ event.severity or '-' }}</td></tr>
+  <tr><th>Geo</th><td>{{ event.geoip_country or '-' }}{% if event.geoip_city %}, {{ event.geoip_city }}{% endif %}</td></tr>
+</table>
+
+<h2>Why this decision</h2>
+{% include "events/_why_hidden.html" %}
+
+<h2>Raw EVE</h2>
+<pre class="raw">{{ event.raw | tojson(indent=2) }}</pre>
+{% endblock %}

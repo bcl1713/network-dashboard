@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{% if is_new %}New filter{% else %}Filter #{{ rule.id }}{% endif %}{% endblock %}
+{% block content %}
+<h1>{% if is_new %}New filter{% else %}Filter #{{ rule.id }} &mdash; {{ rule.name }}{% endif %}</h1>
+
+{% if errors %}
+<div class="error">
+  <strong>Could not save:</strong>
+  <pre>{{ errors }}</pre>
+</div>
+{% endif %}
+
+<form method="post" action="{% if is_new %}/filters/new{% else %}/filters/{{ rule.id }}{% endif %}" class="filter-form">
+  {% include "filters/_form_fields.html" %}
+  <div class="form-actions">
+    <button type="submit">{% if is_new %}Create filter{% else %}Save changes{% endif %}</button>
+    {% if not is_new %}
+      <a class="button" href="/filters/{{ rule.id }}/preview">Preview against ring</a>
+      <button formaction="/htmx/filters/{{ rule.id }}/duplicate" formmethod="post" hx-swap="none">Duplicate</button>
+    {% endif %}
+  </div>
+</form>
+
+<section class="preview-pane">
+  <h2>Live draft preview</h2>
+  <p class="muted small">Match this rule against the engine's recent ring buffer.</p>
+  <button hx-post="/htmx/filters/preview" hx-include=".filter-form" hx-target="#preview-results" hx-swap="innerHTML">Run preview</button>
+  <div id="preview-results"></div>
+</section>
+
+{% if matches is defined %}
+<section>
+  <h2>Recent matches</h2>
+  {% if matches %}
+  <table class="table">
+    <thead><tr><th>Matched at</th><th>Event</th><th>Decision</th></tr></thead>
+    <tbody>
+      {% for m in matches %}
+      <tr>
+        <td>{{ m.matched_at }}</td>
+        <td><a href="/events/{{ m.event_id }}">{{ m.event_id[:12] }}…</a></td>
+        <td><span class="action action-{{ m.decision }}">{{ m.decision }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No matches yet.</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}
