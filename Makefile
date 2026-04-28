@@ -5,7 +5,8 @@ UI_DIR := services/ui
 
 .PHONY: help setup up down restart logs ps build pull \
         test test-engine test-ui lint fmt \
-        smoke seed migrate backup clean
+        smoke seed migrate backup clean \
+        dev-engine
 
 help:
 	@echo "Common targets:"
@@ -16,10 +17,11 @@ help:
 	@echo "  make logs        - tail logs for all services"
 	@echo "  make build       - rebuild engine + ui images"
 	@echo "  make test        - run engine + ui tests"
-	@echo "  make smoke       - send a synthetic event end-to-end"
+	@echo "  make smoke       - send a synthetic event end-to-end (requires running engine)"
 	@echo "  make seed        - load seed filter rules into the engine"
 	@echo "  make migrate     - run Alembic migrations inside the engine container"
 	@echo "  make backup      - run the SQLite backup script"
+	@echo "  make dev-engine  - run the engine locally without Docker (requires pip install)"
 
 # loki runs as UID 10001; grafana runs as UID 472.
 # Host directories must be owned by those UIDs so the containers can write to them.
@@ -80,3 +82,10 @@ backup:
 clean:
 	$(COMPOSE) down -v
 	rm -rf infra/data/engine/* infra/data/loki/* infra/data/grafana/* infra/data/raw-eve/*
+
+# Run the engine directly with uvicorn — no Docker required.
+# Reads ENGINE_API_TOKEN from the environment or .env.
+# ENGINE_DB_PATH defaults to infra/data/engine/filters.db.
+# Prerequisites: pip install -e services/engine
+dev-engine:
+	bash tools/dev-engine.sh
