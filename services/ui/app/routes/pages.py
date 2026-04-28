@@ -152,9 +152,6 @@ async def events_detail(request: Request, event_id: str):
 
 
 async def _read_form(request: Request) -> dict[str, Any]:
-    from ..logging import get_logger
-    log = get_logger(__name__)
-
     form = await request.form()
     payload: dict[str, Any] = {}
     for k, v in form.multi_items():
@@ -176,5 +173,12 @@ async def _read_form(request: Request) -> dict[str, Any]:
         payload["tags"] = [t.strip() for t in tags_raw.split(",") if t.strip()]
     # Drop helper-only fields the engine doesn't accept.
     payload.pop("from_event_id", None)
-    log.info("form_payload", payload=payload)
+    # Clean up any remaining "None" strings in optional fields
+    optional_fields = [
+        "description", "source_host", "source_subnet", "destination",
+        "destination_subnet", "protocol", "message_match", "notes", "expires_at"
+    ]
+    for field in optional_fields:
+        if payload.get(field) == "None":
+            payload.pop(field, None)
     return payload
