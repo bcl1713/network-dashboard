@@ -47,6 +47,44 @@ old files via cron or `find`:
 find infra/data/raw-eve -name 'eve-*.ndjson' -mtime +30 -delete
 ```
 
+## GeoIP enrichment (not yet configured)
+
+`geoip_country` and `geoip_city` are null on all events. To populate them,
+enrich in Fluent-Bit using its built-in `geoip2` filter against a MaxMind
+GeoLite2 database — no OPNsense changes needed.
+
+**Steps:**
+
+1. Sign up for a free MaxMind account at <https://dev.maxmind.com/geoip/geolite2-free-geolocation-data>
+   and download `GeoLite2-City.mmdb`.
+2. Place the file on TrueNAS, e.g. `/mnt/data/network-dashboard/geoip/GeoLite2-City.mmdb`.
+3. Mount it into the fluent-bit container in `infra/docker-compose.yml`:
+
+   ```yaml
+   volumes:
+     - /mnt/data/network-dashboard/geoip/GeoLite2-City.mmdb:/etc/fluent-bit/GeoLite2-City.mmdb:ro
+   ```
+
+4. Add a filter to `infra/fluent-bit/fluent-bit.conf` before the OUTPUT blocks:
+
+   ```ini
+   [FILTER]
+       Name        geoip2
+       Match       opnsense.eve
+       Database    /etc/fluent-bit/GeoLite2-City.mmdb
+       Lookup_Key  src_ip
+       Record      geoip_country country.names.en
+       Record      geoip_city    city.names.en
+   ```
+
+5. The engine already reads `geoip_country` and `geoip_city` from the payload,
+   so no engine changes are needed.
+6. Recreate the container:
+   `docker compose ... up -d --force-recreate fluent-bit`
+
+Note: The MaxMind GeoLite2 database updates monthly. Consider a cron job to
+re-download it and recreate the container.
+
 ## Common issues
 
 - **Grafana dashboard empty** — confirm Loki tenant header. The provisioned
