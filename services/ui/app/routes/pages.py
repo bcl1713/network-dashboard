@@ -155,7 +155,7 @@ async def _read_form(request: Request) -> dict[str, Any]:
     form = await request.form()
     payload: dict[str, Any] = {}
     for k, v in form.multi_items():
-        if v == "":
+        if v == "" or v == "None":
             continue
         payload[k] = v
     # Booleans
