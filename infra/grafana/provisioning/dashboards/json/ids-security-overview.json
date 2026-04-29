@@ -139,14 +139,14 @@
     },
     {
       "type": "stat",
-      "title": "Outbound to Known Threat",
-      "description": "Tagged events with geolocated destinations (outbound to flagged external IPs)",
+      "title": "Unique Attacking IPs",
+      "description": "Distinct source IPs that triggered alerts in the selected time range",
       "id": 5,
       "gridPos": { "x": 15, "y": 1, "w": 5, "h": 4 },
       "datasource": { "type": "loki", "uid": "Loki-Filtered" },
       "targets": [
         {
-          "expr": "sum(count_over_time({job=\"suricata\", action=\"tag\"} | json | __error__=\"\" | geoip_country != \"\" [$__range]))",
+          "expr": "count(sum by (src_ip) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | src_ip != \"\" [$__range])))",
           "refId": "A",
           "queryType": "instant"
         }
@@ -172,32 +172,28 @@
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
+              { "color": "orange", "value": 10 },
+              { "color": "red", "value": 50 }
             ]
           },
-          "links": [
-            {
-              "title": "View Outbound Threat Alerts",
-              "url": "/d/ids-alert-details/ids-alert-details?var-severity=.*&var-signature=.*&var-dest_country=.%2B&var-src_country=.*&${__url_time_range}",
-              "targetBlank": false
-            }
-          ]
+          "links": []
         },
         "overrides": []
       }
     },
     {
       "type": "stat",
-      "title": "Inbound from Known Threat",
-      "description": "Tagged events where the source IP geolocates to an external country (inbound from flagged external IPs)",
+      "title": "Top Targeted Port",
+      "description": "Destination port with the highest alert count; label shows port number",
       "id": 6,
       "gridPos": { "x": 20, "y": 1, "w": 4, "h": 4 },
       "datasource": { "type": "loki", "uid": "Loki-Filtered" },
       "targets": [
         {
-          "expr": "sum(count_over_time({job=\"suricata\", action=\"tag\"} | json | __error__=\"\" | geoip_src_country != \"\" [$__range]))",
+          "expr": "topk(1, sum by (dest_port) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | dest_port != \"\" [$__range])))",
           "refId": "A",
-          "queryType": "instant"
+          "queryType": "instant",
+          "legendFormat": "Port {{dest_port}}"
         }
       ],
       "options": {
@@ -214,23 +210,14 @@
       },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": { "mode": "fixed", "fixedColor": "#5794F2" },
           "unit": "short",
           "noValue": "0",
           "thresholds": {
             "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
-            ]
+            "steps": [{ "color": "#5794F2", "value": null }]
           },
-          "links": [
-            {
-              "title": "View Inbound Threat Alerts",
-              "url": "/d/ids-alert-details/ids-alert-details?var-severity=.*&var-signature=.*&var-dest_country=.*&var-src_country=.%2B&${__url_time_range}",
-              "targetBlank": false
-            }
-          ]
+          "links": []
         },
         "overrides": []
       }
@@ -355,30 +342,58 @@
       }
     },
     {
-      "type": "piechart",
-      "title": "Top Protocols",
+      "type": "barchart",
+      "title": "Top Destination Ports",
+      "description": "Most frequently targeted destination ports by alert count",
       "id": 10,
       "gridPos": { "x": 16, "y": 6, "w": 8, "h": 10 },
       "datasource": { "type": "loki", "uid": "Loki-Filtered" },
       "targets": [
         {
-          "expr": "sum by (proto) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | proto != \"\" [$__interval]))",
+          "expr": "topk(10, sum by (dest_port) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | dest_port != \"\" [$__range])))",
           "refId": "A",
-          "legendFormat": "{{proto}}"
+          "instant": true
+        }
+      ],
+      "transformations": [
+        { "id": "labelsToFields", "options": { "mode": "columns" } },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true },
+            "renameByName": {
+              "dest_port": "Port",
+              "Value #A": "Count",
+              "Value": "Count"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": [{ "displayName": "Count", "desc": true }]
+          }
         }
       ],
       "options": {
-        "pieType": "donut",
+        "orientation": "horizontal",
+        "groupWidth": 0.7,
+        "barWidth": 0.97,
+        "showValue": "auto",
+        "fillOpacity": 80,
+        "gradientMode": "none",
+        "tooltip": { "mode": "single" },
         "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "values": ["value"],
-          "showLegend": true
-        },
-        "tooltip": { "mode": "single" }
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        }
       },
       "fieldConfig": {
-        "defaults": { "unit": "short" },
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "fixed", "fixedColor": "#5794F2" }
+        },
         "overrides": []
       }
     },
