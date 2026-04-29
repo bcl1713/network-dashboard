@@ -38,6 +38,7 @@
         "defaults": {
           "color": { "mode": "fixed", "fixedColor": "#F2495C" },
           "unit": "short",
+          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [{ "color": "#F2495C", "value": null }]
@@ -70,6 +71,7 @@
         "defaults": {
           "color": { "mode": "fixed", "fixedColor": "#FF9830" },
           "unit": "short",
+          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [{ "color": "#FF9830", "value": null }]
@@ -102,6 +104,7 @@
         "defaults": {
           "color": { "mode": "fixed", "fixedColor": "#73BF69" },
           "unit": "short",
+          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [{ "color": "#73BF69", "value": null }]
@@ -140,6 +143,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "unit": "short",
+          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -181,6 +185,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "unit": "short",
+          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -275,9 +280,8 @@
       "datasource": { "type": "loki", "uid": "Loki-Filtered" },
       "targets": [
         {
-          "expr": "topk(10, sum by (severity, signature) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | signature != \"\" [$__range])))",
+          "expr": "sum by (severity, signature) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | signature != \"\" [$__interval]))",
           "refId": "A",
-          "queryType": "instant",
           "legendFormat": "Sev{{severity}} - {{signature}}"
         }
       ],
@@ -304,9 +308,8 @@
       "datasource": { "type": "loki", "uid": "Loki-Filtered" },
       "targets": [
         {
-          "expr": "topk(5, sum by (proto) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | proto != \"\" [$__range])))",
+          "expr": "sum by (proto) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | proto != \"\" [$__interval]))",
           "refId": "A",
-          "queryType": "instant",
           "legendFormat": "{{proto}}"
         }
       ],
@@ -388,6 +391,7 @@
         {
           "id": "organize",
           "options": {
+            "excludeByName": { "Time": true },
             "renameByName": {
               "geoip_country": "Country",
               "Value": "Count",
@@ -494,6 +498,7 @@
         {
           "id": "organize",
           "options": {
+            "excludeByName": { "Time": true },
             "renameByName": {
               "geoip_src_country": "Country",
               "Value": "Count",
