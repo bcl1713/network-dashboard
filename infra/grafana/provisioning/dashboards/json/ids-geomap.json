@@ -1,5 +1,5 @@
 {
-  "annotations": {"list": []},
+  "annotations": { "list": [] },
   "editable": true,
   "graphTooltip": 0,
   "id": null,
@@ -7,22 +7,36 @@
   "panels": [
     {
       "type": "geomap",
-      "title": "Destinations by country (24h)",
+      "title": "Destinations by location (24h)",
       "id": 1,
-      "gridPos": {"x": 0, "y": 0, "w": 24, "h": 14},
-      "datasource": {"type": "loki", "uid": "Loki-Filtered"},
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 14 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
       "targets": [
-        {"expr": "sum by (geoip_country) (count_over_time({job=\"suricata\"} | json | __error__=\"\" [24h]))", "refId": "A", "instant": true}
+        {
+          "expr": "sum by (geoip_latitude, geoip_longitude, geoip_country) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | geoip_country != \"\" [24h]))",
+          "refId": "A",
+          "instant": true
+        }
       ],
       "options": {
-        "view": {"id": "zero", "lat": 20, "lon": 0, "zoom": 2},
-        "basemap": {"type": "default"},
+        "view": { "id": "zero", "lat": 20, "lon": 0, "zoom": 2 },
+        "basemap": { "type": "default" },
         "layers": [
           {
             "type": "markers",
-            "name": "By country",
-            "config": {"showLegend": true, "style": {"color": {"fixed": "red"}, "size": {"min": 4, "max": 24, "fixed": 8}}},
-            "location": {"mode": "auto"}
+            "name": "Destinations",
+            "config": {
+              "showLegend": true,
+              "style": {
+                "color": { "fixed": "red" },
+                "size": { "min": 4, "max": 24, "fixed": 8 }
+              }
+            },
+            "location": {
+              "mode": "coords",
+              "latitude": "geoip_latitude",
+              "longitude": "geoip_longitude"
+            }
           }
         ]
       }
@@ -31,28 +45,36 @@
       "type": "table",
       "title": "Top countries (24h)",
       "id": 2,
-      "gridPos": {"x": 0, "y": 14, "w": 12, "h": 10},
-      "datasource": {"type": "loki", "uid": "Loki-Filtered"},
+      "gridPos": { "x": 0, "y": 14, "w": 12, "h": 10 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
       "targets": [
-        {"expr": "topk(20, sum by (geoip_country) (count_over_time({job=\"suricata\"} | json [24h])))", "refId": "A", "instant": true}
+        {
+          "expr": "topk(20, sum by (geoip_country) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | geoip_country != \"\" [24h])))",
+          "refId": "A",
+          "instant": true
+        }
       ]
     },
     {
       "type": "table",
-      "title": "Top cities (24h)",
+      "title": "Top destinations (24h)",
       "id": 3,
-      "gridPos": {"x": 12, "y": 14, "w": 12, "h": 10},
-      "datasource": {"type": "loki", "uid": "Loki-Filtered"},
+      "gridPos": { "x": 12, "y": 14, "w": 12, "h": 10 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
       "targets": [
-        {"expr": "topk(20, sum by (geoip_country, geoip_city) (count_over_time({job=\"suricata\"} | json [24h])))", "refId": "A", "instant": true}
+        {
+          "expr": "topk(20, sum by (geoip_country, geoip_latitude, geoip_longitude) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | geoip_country != \"\" [24h])))",
+          "refId": "A",
+          "instant": true
+        }
       ]
     }
   ],
   "refresh": "60s",
   "schemaVersion": 39,
   "tags": ["ids", "suricata", "geo"],
-  "templating": {"list": []},
-  "time": {"from": "now-24h", "to": "now"},
+  "templating": { "list": [] },
+  "time": { "from": "now-24h", "to": "now" },
   "title": "IDS Geomap",
   "uid": "ids-geomap",
   "version": 1
