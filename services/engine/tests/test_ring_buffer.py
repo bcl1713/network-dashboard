@@ -20,7 +20,8 @@ def _ev(eid: str) -> NormalizedEvent:
         severity=1,
         host="h",
         geoip_country=None,
-        geoip_city=None,
+        geoip_latitude=None,
+        geoip_longitude=None,
         raw={},
     )
 

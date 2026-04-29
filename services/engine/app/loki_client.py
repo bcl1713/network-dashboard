@@ -61,7 +61,8 @@ class LokiClient:
                 "signature": event.signature,
                 "severity": event.severity,
                 "geoip_country": event.geoip_country,
-                "geoip_city": event.geoip_city,
+                "geoip_latitude": event.geoip_latitude,
+                "geoip_longitude": event.geoip_longitude,
             },
             separators=(",", ":"),
         )

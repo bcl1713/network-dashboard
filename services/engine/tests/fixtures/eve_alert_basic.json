@@ -18,8 +18,7 @@
     "category": "Potentially Bad Traffic",
     "severity": 2
   },
-  "geoip": {
-    "country_name": "United Kingdom",
-    "city_name": "London"
-  }
+  "geoip_country": "United Kingdom",
+  "geoip_latitude": 51.5074,
+  "geoip_longitude": -0.1278
 }

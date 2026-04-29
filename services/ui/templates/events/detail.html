@@ -13,7 +13,7 @@
   <tr><th>SID</th><td>{{ event.sid or '-' }} (gid {{ event.generator_id or '-' }})</td></tr>
   <tr><th>Signature</th><td>{{ event.signature or '-' }}</td></tr>
   <tr><th>Severity</th><td>{{ event.severity or '-' }}</td></tr>
-  <tr><th>Geo</th><td>{{ event.geoip_country or '-' }}{% if event.geoip_city %}, {{ event.geoip_city }}{% endif %}</td></tr>
+  <tr><th>Geo</th><td>{{ event.geoip_country or '-' }}{% if event.geoip_latitude is not none and event.geoip_longitude is not none %} ({{ "%.4f"|format(event.geoip_latitude) }}, {{ "%.4f"|format(event.geoip_longitude) }}){% endif %}</td></tr>
 </table>
 
 <h2>Why this decision</h2>

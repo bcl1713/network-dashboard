@@ -21,7 +21,8 @@ def _ev(**kw) -> NormalizedEvent:
         severity=2,
         host="opnsense",
         geoip_country=None,
-        geoip_city=None,
+        geoip_latitude=None,
+        geoip_longitude=None,
         raw={},
     )
     base.update(kw)

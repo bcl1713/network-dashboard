@@ -15,8 +15,7 @@
     "signature": "ET POLICY Public DNS Query",
     "severity": 3
   },
-  "geoip": {
-    "country_name": "United States",
-    "city_name": "Mountain View"
-  }
+  "geoip_country": "United States",
+  "geoip_latitude": 37.386,
+  "geoip_longitude": -122.0838
 }

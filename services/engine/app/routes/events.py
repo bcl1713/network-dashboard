@@ -30,7 +30,8 @@ def _serialize(event) -> dict:
         "severity": event.severity,
         "host": event.host,
         "geoip_country": event.geoip_country,
-        "geoip_city": event.geoip_city,
+        "geoip_latitude": event.geoip_latitude,
+        "geoip_longitude": event.geoip_longitude,
         "raw": event.raw,
     }
 

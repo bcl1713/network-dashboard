@@ -29,7 +29,8 @@ class NormalizedEvent:
     severity: int | None
     host: str | None
     geoip_country: str | None
-    geoip_city: str | None
+    geoip_latitude: float | None
+    geoip_longitude: float | None
     raw: dict[str, Any] = field(default_factory=dict)
 
     def to_loki_labels(self, action: str) -> dict[str, str]:
@@ -41,6 +42,15 @@ class NormalizedEvent:
             "severity": str(self.severity) if self.severity is not None else "0",
             "action": action,
         }
+
+
+def _coerce_float(value: Any) -> float | None:
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _coerce_int(value: Any) -> int | None:
@@ -79,7 +89,6 @@ def normalize(payload: dict[str, Any]) -> NormalizedEvent:
     Missing fields are tolerated; downstream callers handle Nones explicitly.
     """
     alert = payload.get("alert") or {}
-    geoip = payload.get("geoip") or payload.get("alert", {}).get("geoip") or {}
 
     return NormalizedEvent(
         event_id=_stable_event_id(payload),
@@ -95,7 +104,8 @@ def normalize(payload: dict[str, Any]) -> NormalizedEvent:
         signature=alert.get("signature"),
         severity=_coerce_int(alert.get("severity")),
         host=payload.get("host") or payload.get("hostname"),
-        geoip_country=geoip.get("country_name") or geoip.get("country"),
-        geoip_city=geoip.get("city_name") or geoip.get("city"),
+        geoip_country=payload.get("geoip_country"),
+        geoip_latitude=_coerce_float(payload.get("geoip_latitude")),
+        geoip_longitude=_coerce_float(payload.get("geoip_longitude")),
         raw=payload,
     )

@@ -45,9 +45,7 @@ def test_filters_create_redirects(client, fake_engine):
 def test_filters_list_shows_created(client, fake_engine):
     import asyncio
 
-    asyncio.get_event_loop().run_until_complete(
-        fake_engine.create_filter({"name": "x", "action": "tag", "sid": 1})
-    )
+    asyncio.run(fake_engine.create_filter({"name": "x", "action": "tag", "sid": 1}))
     r = client.get("/filters")
     assert r.status_code == 200
     assert "x" in r.text
@@ -75,7 +73,8 @@ def test_event_detail_renders_create_link(client, fake_engine):
         "severity": 2,
         "host": "h",
         "geoip_country": None,
-        "geoip_city": None,
+        "geoip_latitude": None,
+        "geoip_longitude": None,
         "raw": {"a": 1},
     }
     r = client.get("/events/abc")
@@ -87,9 +86,7 @@ def test_event_detail_renders_create_link(client, fake_engine):
 def test_htmx_lifecycle_returns_row_fragment(client, fake_engine):
     import asyncio
 
-    rule = asyncio.get_event_loop().run_until_complete(
-        fake_engine.create_filter({"name": "x", "action": "tag", "sid": 1})
-    )
+    rule = asyncio.run(fake_engine.create_filter({"name": "x", "action": "tag", "sid": 1}))
     r = client.post(
         f"/htmx/filters/{rule['id']}/lifecycle",
         data={"action": "disable"},

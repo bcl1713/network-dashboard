@@ -16,7 +16,8 @@ def test_normalize_extracts_alert_fields(basic_event):
     assert e.signature == "ET POLICY Telegram Outbound Bot API"
     assert e.host == "opnsense.local"
     assert e.geoip_country == "United Kingdom"
-    assert e.geoip_city == "London"
+    assert e.geoip_latitude == 51.5074
+    assert e.geoip_longitude == -0.1278
     assert e.event_id  # deterministic, non-empty
 
 
