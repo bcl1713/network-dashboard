@@ -18,6 +18,9 @@ def test_normalize_extracts_alert_fields(basic_event):
     assert e.geoip_country == "United Kingdom"
     assert e.geoip_latitude == 51.5074
     assert e.geoip_longitude == -0.1278
+    assert e.geoip_src_country == "Germany"
+    assert e.geoip_src_latitude == 51.1657
+    assert e.geoip_src_longitude == 10.4515
     assert e.event_id  # deterministic, non-empty
 
 
@@ -25,6 +28,13 @@ def test_normalize_event_id_is_stable_for_same_flow(basic_event):
     a = normalize(basic_event)
     b = normalize(basic_event)
     assert a.event_id == b.event_id
+
+
+def test_normalize_src_geoip_absent_returns_none(dns_event):
+    e = normalize(dns_event)
+    assert e.geoip_src_country is None
+    assert e.geoip_src_latitude is None
+    assert e.geoip_src_longitude is None
 
 
 def test_normalize_handles_missing_alert_block():

@@ -31,6 +31,9 @@ class NormalizedEvent:
     geoip_country: str | None
     geoip_latitude: float | None
     geoip_longitude: float | None
+    geoip_src_country: str | None = None
+    geoip_src_latitude: float | None = None
+    geoip_src_longitude: float | None = None
     raw: dict[str, Any] = field(default_factory=dict)
 
     def to_loki_labels(self, action: str) -> dict[str, str]:
@@ -107,5 +110,8 @@ def normalize(payload: dict[str, Any]) -> NormalizedEvent:
         geoip_country=payload.get("geoip_country"),
         geoip_latitude=_coerce_float(payload.get("geoip_latitude")),
         geoip_longitude=_coerce_float(payload.get("geoip_longitude")),
+        geoip_src_country=payload.get("geoip_src_country"),
+        geoip_src_latitude=_coerce_float(payload.get("geoip_src_latitude")),
+        geoip_src_longitude=_coerce_float(payload.get("geoip_src_longitude")),
         raw=payload,
     )

@@ -20,5 +20,8 @@
   },
   "geoip_country": "United Kingdom",
   "geoip_latitude": 51.5074,
-  "geoip_longitude": -0.1278
+  "geoip_longitude": -0.1278,
+  "geoip_src_country": "Germany",
+  "geoip_src_latitude": 51.1657,
+  "geoip_src_longitude": 10.4515
 }

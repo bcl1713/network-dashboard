@@ -1,0 +1,552 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "row",
+      "title": "Event Severity",
+      "id": 1,
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "High Severity",
+      "id": 2,
+      "gridPos": { "x": 0, "y": 1, "w": 5, "h": 4 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({job=\"suricata\", severity=\"1\"}[$__interval]))",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "orientation": "auto",
+        "text": {},
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "#F2495C" },
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "#F2495C", "value": null }]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Medium Severity",
+      "id": 3,
+      "gridPos": { "x": 5, "y": 1, "w": 5, "h": 4 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({job=\"suricata\", severity=\"2\"}[$__interval]))",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "orientation": "auto",
+        "text": {},
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "#FF9830" },
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "#FF9830", "value": null }]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Low Severity",
+      "id": 4,
+      "gridPos": { "x": 10, "y": 1, "w": 5, "h": 4 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({job=\"suricata\", severity=\"3\"}[$__interval]))",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "graphMode": "area",
+        "colorMode": "background",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "orientation": "auto",
+        "text": {},
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "#73BF69" },
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "#73BF69", "value": null }]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Outbound to Known Threat",
+      "description": "Tagged events with geolocated destinations (outbound to flagged external IPs)",
+      "id": 5,
+      "gridPos": { "x": 15, "y": 1, "w": 5, "h": 4 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({job=\"suricata\", action=\"tag\"} | json | __error__=\"\" | geoip_country != \"\" [$__range]))",
+          "refId": "A",
+          "queryType": "instant"
+        }
+      ],
+      "options": {
+        "graphMode": "none",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "text": {},
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Inbound from Known Threat",
+      "description": "Tagged events where the source IP geolocates to an external country (inbound from flagged external IPs)",
+      "id": 6,
+      "gridPos": { "x": 20, "y": 1, "w": 4, "h": 4 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({job=\"suricata\", action=\"tag\"} | json | __error__=\"\" | geoip_src_country != \"\" [$__range]))",
+          "refId": "A",
+          "queryType": "instant"
+        }
+      ],
+      "options": {
+        "graphMode": "none",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "text": {},
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "row",
+      "title": "Alert Metrics",
+      "id": 7,
+      "gridPos": { "x": 0, "y": 5, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Alert by Severity",
+      "id": 8,
+      "gridPos": { "x": 0, "y": 6, "w": 8, "h": 10 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
+      "targets": [
+        {
+          "expr": "sum by (severity) (count_over_time({job=\"suricata\"}[$__interval]))",
+          "refId": "A",
+          "legendFormat": "{{severity}}"
+        }
+      ],
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "none" },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": ["sum"],
+          "showLegend": true
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "linear",
+            "fillOpacity": 80,
+            "stacking": { "mode": "normal", "group": "A" },
+            "showPoints": "never",
+            "spanNulls": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "1" },
+            "properties": [
+              { "id": "displayName", "value": "High" },
+              {
+                "id": "color",
+                "value": { "mode": "fixed", "fixedColor": "#F2495C" }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "2" },
+            "properties": [
+              { "id": "displayName", "value": "Medium" },
+              {
+                "id": "color",
+                "value": { "mode": "fixed", "fixedColor": "#FF9830" }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "3" },
+            "properties": [
+              { "id": "displayName", "value": "Low" },
+              {
+                "id": "color",
+                "value": { "mode": "fixed", "fixedColor": "#73BF69" }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "piechart",
+      "title": "Top Alert Type",
+      "id": 9,
+      "gridPos": { "x": 8, "y": 6, "w": 8, "h": 10 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (severity, signature) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | signature != \"\" [$__range])))",
+          "refId": "A",
+          "queryType": "instant",
+          "legendFormat": "Sev{{severity}} - {{signature}}"
+        }
+      ],
+      "options": {
+        "pieType": "donut",
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": ["value"],
+          "showLegend": true
+        },
+        "tooltip": { "mode": "single" }
+      },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": []
+      }
+    },
+    {
+      "type": "piechart",
+      "title": "Top Protocols",
+      "id": 10,
+      "gridPos": { "x": 16, "y": 6, "w": 8, "h": 10 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
+      "targets": [
+        {
+          "expr": "topk(5, sum by (proto) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | proto != \"\" [$__range])))",
+          "refId": "A",
+          "queryType": "instant",
+          "legendFormat": "{{proto}}"
+        }
+      ],
+      "options": {
+        "pieType": "donut",
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": ["value"],
+          "showLegend": true
+        },
+        "tooltip": { "mode": "single" }
+      },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": []
+      }
+    },
+    {
+      "type": "geomap",
+      "title": "Outbound",
+      "description": "External destination IPs for outbound traffic (geoip enriched on dest_ip)",
+      "id": 11,
+      "gridPos": { "x": 0, "y": 16, "w": 8, "h": 12 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
+      "targets": [
+        {
+          "expr": "sum by (geoip_latitude, geoip_longitude, geoip_country) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | geoip_country != \"\" [$__range]))",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "options": {
+        "view": { "id": "zero", "lat": 20, "lon": 0, "zoom": 2 },
+        "basemap": { "type": "default" },
+        "layers": [
+          {
+            "type": "markers",
+            "name": "Outbound Destinations",
+            "config": {
+              "showLegend": true,
+              "style": {
+                "color": { "fixed": "#FF9830" },
+                "size": { "min": 4, "max": 20, "fixed": 6 },
+                "opacity": 0.7
+              }
+            },
+            "location": {
+              "mode": "coords",
+              "latitude": "geoip_latitude",
+              "longitude": "geoip_longitude"
+            },
+            "tooltip": true
+          }
+        ],
+        "controls": {
+          "showZoom": true,
+          "mouseWheelZoom": false,
+          "showAttribution": true,
+          "showScale": false
+        }
+      },
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    },
+    {
+      "type": "table",
+      "title": "Destination by Country",
+      "id": 12,
+      "gridPos": { "x": 8, "y": 16, "w": 4, "h": 12 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
+      "targets": [
+        {
+          "expr": "topk(20, sum by (geoip_country) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | geoip_country != \"\" [$__range])))",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "geoip_country": "Country",
+              "Value": "Count",
+              "Value #A": "Count"
+            },
+            "indexByName": { "geoip_country": 0, "Value": 1 }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": [{ "displayName": "Count", "desc": true }]
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Count", "desc": true }]
+      },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Country" },
+            "properties": [
+              { "id": "custom.width", "value": 80 },
+              { "id": "custom.displayMode", "value": "color-text" },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [{ "color": "#5794F2", "value": null }]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Count" },
+            "properties": [{ "id": "custom.width", "value": 80 }]
+          }
+        ]
+      }
+    },
+    {
+      "type": "geomap",
+      "title": "Inbound",
+      "description": "Source IP locations for inbound traffic (geoip enriched on src_ip)",
+      "id": 13,
+      "gridPos": { "x": 12, "y": 16, "w": 8, "h": 12 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
+      "targets": [
+        {
+          "expr": "sum by (geoip_src_latitude, geoip_src_longitude, geoip_src_country) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | geoip_src_country != \"\" [$__range]))",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "options": {
+        "view": { "id": "zero", "lat": 20, "lon": 0, "zoom": 2 },
+        "basemap": { "type": "default" },
+        "layers": [
+          {
+            "type": "markers",
+            "name": "Inbound Sources",
+            "config": {
+              "showLegend": true,
+              "style": {
+                "color": { "fixed": "#73BF69" },
+                "size": { "min": 4, "max": 20, "fixed": 6 },
+                "opacity": 0.7
+              }
+            },
+            "location": {
+              "mode": "coords",
+              "latitude": "geoip_src_latitude",
+              "longitude": "geoip_src_longitude"
+            },
+            "tooltip": true
+          }
+        ],
+        "controls": {
+          "showZoom": true,
+          "mouseWheelZoom": false,
+          "showAttribution": true,
+          "showScale": false
+        }
+      },
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    },
+    {
+      "type": "table",
+      "title": "Source by Country",
+      "id": 14,
+      "gridPos": { "x": 20, "y": 16, "w": 4, "h": 12 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
+      "targets": [
+        {
+          "expr": "topk(20, sum by (geoip_src_country) (count_over_time({job=\"suricata\"} | json | __error__=\"\" | geoip_src_country != \"\" [$__range])))",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "geoip_src_country": "Country",
+              "Value": "Count",
+              "Value #A": "Count"
+            },
+            "indexByName": { "geoip_src_country": 0, "Value": 1 }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": [{ "displayName": "Count", "desc": true }]
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Count", "desc": true }]
+      },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Country" },
+            "properties": [
+              { "id": "custom.width", "value": 80 },
+              { "id": "custom.displayMode", "value": "color-text" },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [{ "color": "#5794F2", "value": null }]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Count" },
+            "properties": [{ "id": "custom.width", "value": 80 }]
+          }
+        ]
+      }
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["ids", "suricata", "security"],
+  "templating": { "list": [] },
+  "time": { "from": "now-24h", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "IDS Security Overview",
+  "uid": "ids-security-overview",
+  "version": 1,
+  "weekStart": ""
+}

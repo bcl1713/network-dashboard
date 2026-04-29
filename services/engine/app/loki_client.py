@@ -63,6 +63,9 @@ class LokiClient:
                 "geoip_country": event.geoip_country,
                 "geoip_latitude": event.geoip_latitude,
                 "geoip_longitude": event.geoip_longitude,
+                "geoip_src_country": event.geoip_src_country,
+                "geoip_src_latitude": event.geoip_src_latitude,
+                "geoip_src_longitude": event.geoip_src_longitude,
             },
             separators=(",", ":"),
         )
