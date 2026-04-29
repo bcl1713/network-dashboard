@@ -17,6 +17,7 @@
     {
       "type": "stat",
       "title": "High Severity",
+      "description": "Click to drill into high severity events",
       "id": 2,
       "gridPos": { "x": 0, "y": 1, "w": 5, "h": 4 },
       "datasource": { "type": "loki", "uid": "Loki-Filtered" },
@@ -42,7 +43,14 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [{ "color": "#F2495C", "value": null }]
-          }
+          },
+          "links": [
+            {
+              "title": "View High Severity Alerts",
+              "url": "/d/ids-alert-details/ids-alert-details?var-severity=1&var-signature=.*&var-dest_country=.*&var-src_country=.*&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
         },
         "overrides": []
       }
@@ -50,6 +58,7 @@
     {
       "type": "stat",
       "title": "Medium Severity",
+      "description": "Click to drill into medium severity events",
       "id": 3,
       "gridPos": { "x": 5, "y": 1, "w": 5, "h": 4 },
       "datasource": { "type": "loki", "uid": "Loki-Filtered" },
@@ -75,7 +84,14 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [{ "color": "#FF9830", "value": null }]
-          }
+          },
+          "links": [
+            {
+              "title": "View Medium Severity Alerts",
+              "url": "/d/ids-alert-details/ids-alert-details?var-severity=2&var-signature=.*&var-dest_country=.*&var-src_country=.*&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
         },
         "overrides": []
       }
@@ -83,6 +99,7 @@
     {
       "type": "stat",
       "title": "Low Severity",
+      "description": "Click to drill into low severity events",
       "id": 4,
       "gridPos": { "x": 10, "y": 1, "w": 5, "h": 4 },
       "datasource": { "type": "loki", "uid": "Loki-Filtered" },
@@ -108,7 +125,14 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [{ "color": "#73BF69", "value": null }]
-          }
+          },
+          "links": [
+            {
+              "title": "View Low Severity Alerts",
+              "url": "/d/ids-alert-details/ids-alert-details?var-severity=3&var-signature=.*&var-dest_country=.*&var-src_country=.*&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
         },
         "overrides": []
       }
@@ -150,7 +174,14 @@
               { "color": "green", "value": null },
               { "color": "red", "value": 1 }
             ]
-          }
+          },
+          "links": [
+            {
+              "title": "View Outbound Threat Alerts",
+              "url": "/d/ids-alert-details/ids-alert-details?var-severity=.*&var-signature=.*&var-dest_country=.%2B&var-src_country=.*&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
         },
         "overrides": []
       }
@@ -192,7 +223,14 @@
               { "color": "green", "value": null },
               { "color": "red", "value": 1 }
             ]
-          }
+          },
+          "links": [
+            {
+              "title": "View Inbound Threat Alerts",
+              "url": "/d/ids-alert-details/ids-alert-details?var-severity=.*&var-signature=.*&var-dest_country=.*&var-src_country=.%2B&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
         },
         "overrides": []
       }
@@ -236,7 +274,14 @@
             "stacking": { "mode": "normal", "group": "A" },
             "showPoints": "never",
             "spanNulls": false
-          }
+          },
+          "links": [
+            {
+              "title": "Drill into Severity ${__series.name}",
+              "url": "/d/ids-alert-details/ids-alert-details?var-severity=${__series.name}&var-signature=.*&var-dest_country=.*&var-src_country=.*&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
         },
         "overrides": [
           {
@@ -296,7 +341,16 @@
         "tooltip": { "mode": "single" }
       },
       "fieldConfig": {
-        "defaults": { "unit": "short" },
+        "defaults": {
+          "unit": "short",
+          "links": [
+            {
+              "title": "Drill into ${__field.labels.signature}",
+              "url": "/d/ids-alert-details/ids-alert-details?var-severity=${__field.labels.severity}&var-signature=${__field.labels.signature:regex}&var-dest_country=.*&var-src_country=.*&${__url_time_range}",
+              "targetBlank": false
+            }
+          ]
+        },
         "overrides": []
       }
     },
@@ -355,7 +409,14 @@
                 "color": { "fixed": "#FF9830" },
                 "size": { "min": 4, "max": 20, "fixed": 6 },
                 "opacity": 0.7
-              }
+              },
+              "dataLinks": [
+                {
+                  "title": "Drill into ${__data.fields.geoip_country}",
+                  "url": "/d/ids-alert-details/ids-alert-details?var-severity=.*&var-signature=.*&var-dest_country=${__data.fields.geoip_country:regex}&var-src_country=.*&${__url_time_range}",
+                  "targetBlank": false
+                }
+              ]
             },
             "location": {
               "mode": "coords",
@@ -425,6 +486,16 @@
                   "mode": "absolute",
                   "steps": [{ "color": "#5794F2", "value": null }]
                 }
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Drill into ${__value.text}",
+                    "url": "/d/ids-alert-details/ids-alert-details?var-severity=.*&var-signature=.*&var-dest_country=${__value.text:regex}&var-src_country=.*&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
               }
             ]
           },
@@ -462,7 +533,14 @@
                 "color": { "fixed": "#73BF69" },
                 "size": { "min": 4, "max": 20, "fixed": 6 },
                 "opacity": 0.7
-              }
+              },
+              "dataLinks": [
+                {
+                  "title": "Drill into ${__data.fields.geoip_src_country}",
+                  "url": "/d/ids-alert-details/ids-alert-details?var-severity=.*&var-signature=.*&var-dest_country=.*&var-src_country=${__data.fields.geoip_src_country:regex}&${__url_time_range}",
+                  "targetBlank": false
+                }
+              ]
             },
             "location": {
               "mode": "coords",
@@ -532,6 +610,16 @@
                   "mode": "absolute",
                   "steps": [{ "color": "#5794F2", "value": null }]
                 }
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Drill into ${__value.text}",
+                    "url": "/d/ids-alert-details/ids-alert-details?var-severity=.*&var-signature=.*&var-dest_country=.*&var-src_country=${__value.text:regex}&${__url_time_range}",
+                    "targetBlank": false
+                  }
+                ]
               }
             ]
           },
@@ -552,6 +640,6 @@
   "timezone": "",
   "title": "IDS Security Overview",
   "uid": "ids-security-overview",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

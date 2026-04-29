@@ -1,0 +1,265 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "arrow-left",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "← Security Overview",
+      "tooltip": "Back to Security Overview",
+      "type": "link",
+      "url": "/d/ids-security-overview"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "text",
+      "title": "Active Filters",
+      "id": 1,
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 2 },
+      "options": {
+        "mode": "markdown",
+        "content": "**Severity:** `${severity}` &nbsp;&nbsp; **Signature:** `${signature}` &nbsp;&nbsp; **Dest Country:** `${dest_country}` &nbsp;&nbsp; **Src Country:** `${src_country}`"
+      },
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    },
+    {
+      "type": "stat",
+      "title": "Matching Events",
+      "id": 2,
+      "gridPos": { "x": 0, "y": 2, "w": 4, "h": 3 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({job=\"suricata\", severity=~\"^${severity}$\"} | json | __error__=\"\" | signature =~ \"^${signature:regex}$\" | geoip_country =~ \"^${dest_country:regex}$\" | geoip_src_country =~ \"^${src_country:regex}$\" [$__range]))",
+          "refId": "A",
+          "queryType": "instant"
+        }
+      ],
+      "options": {
+        "graphMode": "none",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "unit": "short",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 100 },
+              { "color": "red", "value": 1000 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "table",
+      "title": "Alert Events",
+      "id": 3,
+      "gridPos": { "x": 0, "y": 5, "w": 24, "h": 18 },
+      "datasource": { "type": "loki", "uid": "Loki-Filtered" },
+      "targets": [
+        {
+          "expr": "{job=\"suricata\", severity=~\"^${severity}$\"} | json | __error__=\"\" | signature =~ \"^${signature:regex}$\" | geoip_country =~ \"^${dest_country:regex}$\" | geoip_src_country =~ \"^${src_country:regex}$\" | keep sid, signature, severity, src_ip, src_port, dest_ip, dest_port, proto, geoip_country, geoip_src_country",
+          "refId": "A",
+          "queryType": "range"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "id": true,
+              "tsNs": true,
+              "Line": true,
+              "job": true,
+              "host": true,
+              "action": true
+            },
+            "renameByName": {
+              "Time": "Timestamp",
+              "sid": "SID",
+              "signature": "Signature",
+              "severity": "Severity",
+              "src_ip": "Src IP",
+              "src_port": "Src Port",
+              "dest_ip": "Dest IP",
+              "dest_port": "Dest Port",
+              "proto": "Protocol",
+              "geoip_country": "Dest Country",
+              "geoip_src_country": "Src Country"
+            },
+            "indexByName": {
+              "Time": 0,
+              "sid": 1,
+              "signature": 2,
+              "severity": 3,
+              "src_ip": 4,
+              "src_port": 5,
+              "dest_ip": 6,
+              "dest_port": 7,
+              "proto": 8,
+              "geoip_country": 9,
+              "geoip_src_country": 10
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Timestamp", "desc": true }],
+        "footer": { "show": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "minWidth": 80 }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Timestamp" },
+            "properties": [
+              { "id": "custom.width", "value": 180 },
+              { "id": "unit", "value": "dateTimeAsIso" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "SID" },
+            "properties": [{ "id": "custom.width", "value": 90 }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Signature" },
+            "properties": [{ "id": "custom.width", "value": 340 }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Severity" },
+            "properties": [
+              { "id": "custom.width", "value": 85 },
+              { "id": "custom.displayMode", "value": "color-background" },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "1": { "text": "High", "color": "#F2495C", "index": 0 },
+                      "2": { "text": "Medium", "color": "#FF9830", "index": 1 },
+                      "3": { "text": "Low", "color": "#73BF69", "index": 2 }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Src IP" },
+            "properties": [{ "id": "custom.width", "value": 130 }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Dest IP" },
+            "properties": [{ "id": "custom.width", "value": 130 }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Src Port" },
+            "properties": [{ "id": "custom.width", "value": 80 }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Dest Port" },
+            "properties": [{ "id": "custom.width", "value": 80 }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Protocol" },
+            "properties": [{ "id": "custom.width", "value": 80 }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Dest Country" },
+            "properties": [{ "id": "custom.width", "value": 120 }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Src Country" },
+            "properties": [{ "id": "custom.width", "value": 120 }]
+          }
+        ]
+      }
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["ids", "suricata", "security", "details"],
+  "templating": {
+    "list": [
+      {
+        "name": "severity",
+        "label": "Severity",
+        "type": "textbox",
+        "query": ".*",
+        "current": { "selected": false, "text": ".*", "value": ".*" },
+        "hide": 0,
+        "options": [{ "selected": true, "text": ".*", "value": ".*" }],
+        "skipUrlSync": false,
+        "description": "Regex severity filter (.*=all, 1=High, 2=Medium, 3=Low)"
+      },
+      {
+        "name": "signature",
+        "label": "Signature",
+        "type": "textbox",
+        "query": ".*",
+        "current": { "selected": false, "text": ".*", "value": ".*" },
+        "hide": 0,
+        "options": [{ "selected": true, "text": ".*", "value": ".*" }],
+        "skipUrlSync": false,
+        "description": "Alert signature filter (.*=all)"
+      },
+      {
+        "name": "dest_country",
+        "label": "Dest Country",
+        "type": "textbox",
+        "query": ".*",
+        "current": { "selected": false, "text": ".*", "value": ".*" },
+        "hide": 0,
+        "options": [{ "selected": true, "text": ".*", "value": ".*" }],
+        "skipUrlSync": false,
+        "description": "Destination country filter (.*=all, .+=non-empty)"
+      },
+      {
+        "name": "src_country",
+        "label": "Src Country",
+        "type": "textbox",
+        "query": ".*",
+        "current": { "selected": false, "text": ".*", "value": ".*" },
+        "hide": 0,
+        "options": [{ "selected": true, "text": ".*", "value": ".*" }],
+        "skipUrlSync": false,
+        "description": "Source country filter (.*=all, .+=non-empty)"
+      }
+    ]
+  },
+  "time": { "from": "now-24h", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "IDS Alert Details",
+  "uid": "ids-alert-details",
+  "version": 1,
+  "weekStart": ""
+}
