@@ -39,7 +39,7 @@
       "datasource": { "type": "loki", "uid": "Loki-Filtered" },
       "targets": [
         {
-          "expr": "sum(count_over_time({job=\"suricata\", severity=~\"^${severity}$\"} | json | __error__=\"\" | signature =~ \"^${signature}$\" | geoip_country =~ \"^${dest_country}$\" | geoip_src_country =~ \"^${src_country}$\" [$__range]))",
+          "expr": "sum(count_over_time({job=\"suricata\", severity=~\"^${severity}$\"} | json | __error__=\"\" | signature =~ `^${signature}$` | geoip_country =~ `^${dest_country}$` | geoip_src_country =~ `^${src_country}$` [$__range]))",
           "refId": "A",
           "queryType": "instant"
         }
@@ -80,7 +80,7 @@
       "datasource": { "type": "loki", "uid": "Loki-Filtered" },
       "targets": [
         {
-          "expr": "{job=\"suricata\", severity=~\"^${severity}$\"} | json | __error__=\"\" | signature =~ \"^${signature}$\" | geoip_country =~ \"^${dest_country}$\" | geoip_src_country =~ \"^${src_country}$\" | keep sid, signature, severity, src_ip, src_port, dest_ip, dest_port, proto, geoip_country, geoip_src_country",
+          "expr": "{job=\"suricata\", severity=~\"^${severity}$\"} | json | __error__=\"\" | signature =~ `^${signature}$` | geoip_country =~ `^${dest_country}$` | geoip_src_country =~ `^${src_country}$` | keep sid, signature, severity, src_ip, src_port, dest_ip, dest_port, proto, geoip_country, geoip_src_country",
           "refId": "A",
           "queryType": "range"
         }
