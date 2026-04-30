@@ -415,7 +415,7 @@
                 "value": [
                   {
                     "title": "Drill into ${__data.fields.Signature}",
-                    "url": "/d/ids-alert-details/ids-alert-details?var-severity=${__data.fields.Sev}&var-signature=${__data.fields.Signature:regex}&var-dest_country=.*&var-src_country=.*&var-sid=.*&${__url_time_range}",
+                    "url": "/d/ids-alert-details/ids-alert-details?var-severity=.*&var-signature=${__data.fields.Signature:regex}&var-dest_country=.*&var-src_country=.*&var-sid=.*&${__url_time_range}",
                     "targetBlank": false
                   }
                 ]
