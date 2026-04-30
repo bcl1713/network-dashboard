@@ -93,7 +93,6 @@
               "id": true,
               "tsNs": true,
               "Line": true,
-              "labels": true,
               "job": true,
               "host": true,
               "action": true
@@ -138,6 +137,12 @@
           "custom": { "minWidth": 80 }
         },
         "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "labels" },
+            "properties": [
+              { "id": "custom.hidden", "value": true }
+            ]
+          },
           {
             "matcher": { "id": "byName", "options": "Timestamp" },
             "properties": [
