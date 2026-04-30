@@ -414,8 +414,8 @@
                 "id": "links",
                 "value": [
                   {
-                    "title": "Drill into ${__field.labels.signature}",
-                    "url": "/d/ids-alert-details/ids-alert-details?var-severity=${__field.labels.severity}&var-signature=${__field.labels.signature:regex}&var-dest_country=.*&var-src_country=.*&var-sid=.*&${__url_time_range}",
+                    "title": "Drill into ${__data.fields.Signature}",
+                    "url": "/d/ids-alert-details/ids-alert-details?var-severity=${__data.fields.Sev}&var-signature=${__data.fields.Signature:regex}&var-dest_country=.*&var-src_country=.*&var-sid=.*&${__url_time_range}",
                     "targetBlank": false
                   }
                 ]
