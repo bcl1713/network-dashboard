@@ -356,7 +356,6 @@
         }
       ],
       "transformations": [
-        { "id": "labelsToFields", "options": { "mode": "columns" } },
         {
           "id": "organize",
           "options": {
@@ -382,7 +381,7 @@
         "sortBy": [{ "displayName": "Count", "desc": true }]
       },
       "fieldConfig": {
-        "defaults": { "unit": "short", "custom": { "minWidth": 60 } },
+        "defaults": { "unit": "none", "custom": { "minWidth": 60 } },
         "overrides": [
           {
             "matcher": { "id": "byName", "options": "Sev" },
