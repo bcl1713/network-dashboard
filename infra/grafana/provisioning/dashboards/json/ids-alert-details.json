@@ -87,6 +87,14 @@
       ],
       "transformations": [
         {
+          "id": "extractFields",
+          "options": {
+            "source": "labels",
+            "format": "json",
+            "replace": true
+          }
+        },
+        {
           "id": "organize",
           "options": {
             "excludeByName": {
@@ -95,7 +103,13 @@
               "Line": true,
               "job": true,
               "host": true,
-              "action": true
+              "action": true,
+              "event_id": true,
+              "event_type": true,
+              "geoip_latitude": true,
+              "geoip_longitude": true,
+              "geoip_src_latitude": true,
+              "geoip_src_longitude": true
             },
             "renameByName": {
               "Time": "Timestamp",
@@ -137,12 +151,6 @@
           "custom": { "minWidth": 80 }
         },
         "overrides": [
-          {
-            "matcher": { "id": "byName", "options": "labels" },
-            "properties": [
-              { "id": "custom.hidden", "value": true }
-            ]
-          },
           {
             "matcher": { "id": "byName", "options": "Timestamp" },
             "properties": [
