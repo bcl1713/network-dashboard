@@ -6,228 +6,294 @@ filters.
 
 ---
 
+## Mental model
+
+Events flow: **Suricata → engine classifier → Loki ("filtered" tenant) → Grafana**
+
+The classifier runs every event through the active filter rules:
+
+| Filter action | What happens |
+|---|---|
+| `hide` | Event is **dropped** — never reaches Loki or Grafana |
+| `tag` | Event is forwarded to Loki, labeled `action=tag` |
+| `allow` | Event is force-forwarded, labeled `action=allow` |
+| *(no match)* | Event is forwarded to Loki, labeled `action=passthrough` |
+
+**"Filtered logs" = what's in Loki = everything that was NOT hidden.**
+This is what Grafana shows and what your nightly briefing should focus on.
+
+The raw NDJSON archive on disk contains *everything* (including hidden events)
+and is the ground truth for auditing what was suppressed — but for the
+briefing, Loki is your primary source.
+
+---
+
 ## Authentication
 
-Every API call (except `/healthz` and `/readyz`) requires this header:
+### Engine API
+
+Every call (except `/healthz` and `/readyz`) requires:
 
 ```
 X-API-Token: <ENGINE_API_TOKEN>
 ```
 
-`ENGINE_API_TOKEN` is set in the project `.env` file.  The engine is
-reachable at `http://localhost:<ENGINE_HOST_PORT>` (default port **8081**) when
-running on the host, or at `http://engine:8000` from inside Docker.
+`ENGINE_API_TOKEN` is set in the project `.env` file.
+The engine is reachable at `http://localhost:<ENGINE_HOST_PORT>` (default
+port **8081**) from the host, or `http://engine:8000` from inside Docker.
 
-Verify connectivity before starting:
+### Loki
 
-```bash
-curl -s http://localhost:8081/healthz
-# → {"status":"ok"}
+Loki is reachable at `http://localhost:3100` from the host, or
+`http://loki:3100` from inside Docker.  Multi-tenant auth is enabled, so
+every Loki request requires:
+
 ```
+X-Scope-OrgID: filtered
+```
+
+No bearer token is needed — the org header is the only authentication.
 
 ---
 
-## Pulling the Last 24 Hours of Detection Data
+## Querying last 24 hours of post-filter detections (Loki)
 
-Call these three endpoints in order to build a complete picture.
+All events that passed through the filters live in Loki under the stream
+label `{job="suricata"}`.  Each log line is a JSON object.
 
-### 1. Aggregate stats
+### Stream labels (for filtering queries)
+
+| Label | Values | Notes |
+|---|---|---|
+| `job` | `"suricata"` | Always present |
+| `host` | source hostname or IP | The alerting device |
+| `sid` | Suricata signature ID (string) | `"0"` if unknown |
+| `severity` | `"1"` (critical) / `"2"` (major) / `"3"` (minor) | |
+| `action` | `"tag"` / `"allow"` / `"passthrough"` | Never `"hide"` — those events don't reach Loki |
+
+### Log line fields (JSON)
+
+Each log line contains: `event_id`, `event_type`, `src_ip`, `src_port`,
+`dest_ip`, `dest_port`, `proto`, `sid`, `signature`, `severity`,
+`geoip_country` (destination), `geoip_src_country`,
+`geoip_latitude`, `geoip_longitude`, `geoip_src_latitude`, `geoip_src_longitude`.
+
+### Fetching log lines — range query
+
+```
+GET http://localhost:3100/loki/api/v1/query_range
+X-Scope-OrgID: filtered
+
+Parameters:
+  query     LogQL expression
+  start     RFC3339 or Unix epoch in nanoseconds
+  end       RFC3339 or Unix epoch in nanoseconds
+  limit     max log lines to return (default 100, max 5000)
+  direction forward | backward (default backward = newest first)
+```
+
+Example — all detections in the last 24 hours, newest first:
+
+```bash
+NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+YESTERDAY=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+
+curl -s \
+  -H "X-Scope-OrgID: filtered" \
+  "http://localhost:3100/loki/api/v1/query_range" \
+  --data-urlencode 'query={job="suricata"}' \
+  --data-urlencode "start=$YESTERDAY" \
+  --data-urlencode "end=$NOW" \
+  --data-urlencode "limit=5000" \
+  --data-urlencode "direction=forward"
+```
+
+Response shape:
+
+```json
+{
+  "status": "success",
+  "data": {
+    "resultType": "streams",
+    "result": [
+      {
+        "stream": { "job": "suricata", "host": "10.10.50.42", "sid": "2027865", "severity": "2", "action": "tag" },
+        "values": [
+          ["1746230400000000000", "{\"event_id\":\"a3f9...\",\"src_ip\":\"10.10.50.42\",\"signature\":\"ET POLICY Telegram...\"}"]
+        ]
+      }
+    ]
+  }
+}
+```
+
+Each element of `values` is `[timestamp_nanoseconds, log_line_json_string]`.
+Parse the second element as JSON to get the event fields.
+
+### Useful LogQL query patterns
+
+```
+# All post-filter detections
+{job="suricata"}
+
+# Only unclassified events (no filter matched — highest interest)
+{job="suricata", action="passthrough"}
+
+# Only critical severity
+{job="suricata", severity="1"}
+
+# Specific SID
+{job="suricata", sid="2027865"}
+
+# Specific host
+{job="suricata", host="10.10.50.42"}
+
+# Keyword search within log lines (slow on large volumes)
+{job="suricata"} |= "MALWARE"
+```
+
+### Counting/aggregating with metric queries
+
+To get counts by label without fetching raw log lines:
+
+```
+GET http://localhost:3100/loki/api/v1/query
+X-Scope-OrgID: filtered
+
+Parameters:
+  query   LogQL metric expression
+  time    RFC3339 or Unix epoch (point-in-time for instant query)
+```
+
+Example — count of post-filter events per SID in the last 24 hours:
+
+```bash
+curl -s \
+  -H "X-Scope-OrgID: filtered" \
+  "http://localhost:3100/loki/api/v1/query" \
+  --data-urlencode 'query=sum by (sid) (count_over_time({job="suricata"}[24h]))' \
+  --data-urlencode "time=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+```
+
+Other useful aggregations:
+
+```
+# By host
+sum by (host) (count_over_time({job="suricata"}[24h]))
+
+# By severity
+sum by (severity) (count_over_time({job="suricata"}[24h]))
+
+# By action (tag vs passthrough vs allow)
+sum by (action) (count_over_time({job="suricata"}[24h]))
+
+# Passthrough events only (unclassified — no filter matched)
+count_over_time({job="suricata", action="passthrough"}[24h])
+```
+
+The metric query response has `resultType: "vector"` and each element has
+`{ metric: { sid: "..." }, value: [ timestamp, "count" ] }`.
+
+---
+
+## Engine API — supplementary context
+
+The engine API provides filter metadata and match history.  Use it alongside
+Loki data to understand *why* events look the way they do.
+
+### Authentication reminder
+
+```
+X-API-Token: <ENGINE_API_TOKEN>
+Base URL: http://localhost:8081
+```
+
+### Get 24-hour summary stats
 
 ```
 GET /stats/filters
 ```
 
-Returns a single JSON object:
+Returns: `total_filters`, `active_filters`, `retired_filters`,
+`total_hits_24h` (filter match count), `top_sids` (top 10 SIDs by filter
+match count in last 24h).
 
-```json
-{
-  "total_filters": 42,
-  "active_filters": 38,
-  "retired_filters": 4,
-  "total_hits_24h": 1847,
-  "top_sids": [
-    { "sid": 2027865, "hits_24h": 610, "last_seen_at": "2026-05-03T05:12:33" },
-    ...
-  ]
-}
-```
+Note: `total_hits_24h` here counts events that **matched a filter** (any
+action). It's complementary to the Loki count of events that survived.
 
-`total_hits_24h` is the count of events that matched **any** active filter in
-the last 24 hours (from `filter_audit`).  `top_sids` lists the 10 noisiest
-Suricata signature IDs over that window.
-
-### 2. All active filters with activity counters
+### Get all active filters
 
 ```
 GET /filters
 ```
 
-Returns a JSON array.  Each element has:
+Each filter object includes: `id`, `name`, `action`, `enabled`, `hit_count`
+(cumulative), `last_seen_at`, `source_host`, `source_subnet`, `sid`, `notes`.
 
-| Field | Meaning |
-|---|---|
-| `id` | Numeric filter ID |
-| `name` | Human-readable label |
-| `action` | `"tag"`, `"hide"`, or `"allow"` |
-| `enabled` | `true` / `false` |
-| `hit_count` | Cumulative match count (all time) |
-| `last_seen_at` | Timestamp of most recent match |
-| `last_matched_event_id` | Event ID of that match |
-| `source_host` / `source_subnet` | The IP or CIDR the rule targets |
-| `sid` | Suricata signature ID (if scoped to one SID) |
-| `notes` | Operator rationale |
+Use this to understand the current suppression ruleset — what's being hidden
+vs. what's being tagged/allowed.
 
-A filter with `hit_count > 0` but `last_seen_at` many days ago may be stale
-(the source changed or traffic stopped).  A filter with `hit_count == 0` was
-never matched.
-
-Use `?include_retired=true` to also retrieve retired (soft-deleted) filters.
-
-### 3. Per-filter match audit trail
-
-For any filter you want to inspect more closely:
+### Check what a specific filter has been catching
 
 ```
 GET /filters/{id}/matches?limit=100
 ```
 
-Returns up to 100 recent audit rows:
+Returns recent audit rows: `event_id`, `matched_at`, `decision`,
+`matched_fields` (which fields triggered the match).
 
-```json
-[
-  {
-    "event_id": "a3f9...",
-    "matched_at": "2026-05-03T04:55:01",
-    "decision": "hide",
-    "matched_fields": { "source_host": "10.10.50.42", "sid": 2027865 }
-  },
-  ...
-]
-```
-
-`matched_fields` shows exactly which fields on the event triggered the match —
-useful for verifying a filter is doing what you expect.
-
-### 4. Explain why a specific event was classified the way it was
+### Explain the classification of a specific event
 
 ```
 GET /events/{event_id}/why-hidden
 ```
 
-Replays the full classifier chain against all active rules and returns:
-
-```json
-{
-  "event_id": "a3f9...",
-  "decision": { "action": "hide", "filter_id": 7, "matched_fields": {...} },
-  "chain": [
-    { "filter_id": 12, "name": "Allow DNS from monitoring", "action": "allow", "matched": false, "matched_fields": {} },
-    { "filter_id": 7,  "name": "Telegram noise",            "action": "hide", "matched": true,  "matched_fields": {...} }
-  ]
-}
-```
-
-Note: `event_id` values are only available while the event is in the in-memory
-ring buffer (≈750 most-recent events).  Events that have aged out return 404.
+Replays the full classifier chain for an event still in the ring buffer
+(≈750 most-recent events).  Useful for understanding why a suspicious event
+was tagged rather than hidden (or vice versa).
 
 ---
 
-## Reading Raw NDJSON Logs
+## Creating new filters (suppressing noise from the Loki stream)
 
-The engine archives **every** inbound Suricata event — including those
-suppressed by `hide` filters — to daily NDJSON files:
+When the briefing identifies a high-volume pattern in Loki that is clearly
+benign, create a `hide` filter to remove it from the stream going forward.
 
-```
-infra/data/raw-eve/eve-YYYYMMDD.ndjson
-```
-
-One JSON object per line.  Key fields in each alert event:
-
-```json
-{
-  "timestamp": "2026-05-03T04:55:01.123456+0000",
-  "event_type": "alert",
-  "src_ip": "10.10.50.42",
-  "src_port": 49201,
-  "dest_ip": "149.154.167.41",
-  "dest_port": 443,
-  "proto": "TCP",
-  "alert": {
-    "signature_id": 2027865,
-    "signature": "ET POLICY Telegram Outbound Bot API",
-    "severity": 2,
-    "category": "Potentially Bad Traffic"
-  },
-  "geoip_src_country": "United States",
-  "geoip_country": "United Kingdom"
-}
-```
-
-Only `event_type == "alert"` lines are Suricata detections.  Other types
-(`"dns"`, `"http"`, `"tls"`, etc.) are flow metadata.
-
-To find all events with a specific SID over the last 24 hours:
-
-```bash
-grep '"signature_id": 2027865' infra/data/raw-eve/eve-$(date +%Y%m%d).ndjson
-```
-
-**The NDJSON archive is the ground truth.**  Loki only receives events that
-were *not* hidden.  If you need to audit what was suppressed, read the NDJSON
-files directly.
-
----
-
-## Creating and Managing Filters
-
-### Check before creating
-
-Before proposing a new filter, verify one doesn't already exist:
+### Step 1 — check if a filter already exists
 
 ```
 GET /filters?sid=2027865
 GET /filters?host=10.10.50.42
 ```
 
-### Preview a draft filter
+### Step 2 — preview the proposed filter
 
-Test a proposed filter against the engine's in-memory ring (≈750 most-recent
-events) before committing:
+Test against the engine's current ring buffer (≈750 most-recent events)
+before creating:
 
 ```
 POST /filters/preview?limit=20
 Content-Type: application/json
+X-API-Token: <token>
 
 {
   "name": "draft check",
-  "action": "tag",
+  "action": "hide",
   "source_host": "10.10.50.42",
   "sid": 2027865
 }
 ```
 
-Response:
+Response: `{ "match_count": N, "scanned": M, "samples": [...] }`.
+If `match_count` is a large fraction of `scanned`, the filter may be too
+broad — consider scoping more tightly.
 
-```json
-{
-  "match_count": 14,
-  "scanned": 312,
-  "samples": [
-    { "event_id": "...", "timestamp": "...", "src_ip": "10.10.50.42",
-      "dest_ip": "149.154.167.41", "sid": 2027865, "signature": "ET POLICY ..." }
-  ]
-}
-```
-
-A `match_count` that is a large fraction of `scanned` means the filter is
-broad — consider adding more specificity (e.g., scoping to `source_host`
-instead of just `sid`).
-
-### Create a filter
+### Step 3 — create the filter (disabled by default)
 
 ```
 POST /filters
 Content-Type: application/json
+X-API-Token: <token>
 
 {
   "name": "Telegram noise from media-server",
@@ -236,51 +302,44 @@ Content-Type: application/json
   "enabled": false,
   "source_host": "10.10.50.42",
   "sid": 2027865,
-  "notes": "Verified safe: media-server runs a Telegram notification bot. Observed 600+ hits/day.",
+  "notes": "Verified safe: media-server runs a Telegram notification bot. Observed 600+ hits/day in Loki.",
   "tags": ["ai-suggested"],
-  "created_by": "daily-briefing-agent"
+  "created_by": "daily-briefing-agent",
+  "expires_at": "2026-06-03T00:00:00Z"
 }
 ```
 
-**Always create with `"enabled": false`** so a human can review before the
-filter goes live.  Use `POST /filters/{id}/enable` to activate after review.
-
-Returns the created filter object including its new numeric `id`.
+**Always create with `"enabled": false`** so a human can review before it
+starts suppressing events.  Use `POST /filters/{id}/enable` to activate.
 
 ### Full filter field reference
 
 | Field | Type | Notes |
 |---|---|---|
-| `name` | string, required | Short label shown in the UI |
-| `description` | string | Longer free-text description |
-| `action` | `"tag"` \| `"hide"` \| `"allow"` | Default `"tag"` |
-| `enabled` | bool | Start `false`; enable after review |
+| `name` | string, required | Short label |
+| `description` | string | Longer explanation |
+| `action` | `"tag"` \| `"hide"` \| `"allow"` | |
+| `enabled` | bool | Start `false`; human enables after review |
 | `source_host` | string | Exact source IP. Mutually exclusive with `source_subnet` |
 | `source_subnet` | string | CIDR, e.g. `"10.10.60.0/24"`. Mutually exclusive with `source_host` |
 | `sid` | integer | Suricata signature ID |
-| `generator_id` | integer | Suricata generator (rarely needed) |
 | `destination` | string | Exact dest IP. Mutually exclusive with `destination_subnet` |
-| `destination_subnet` | string | Dest CIDR. Mutually exclusive with `destination` |
+| `destination_subnet` | string | Dest CIDR |
 | `destination_port` | integer 0–65535 | |
 | `protocol` | string | `"TCP"`, `"UDP"`, etc. |
 | `message_match` | string | Text matched against the alert signature string |
 | `match_mode` | `"exact"` \| `"contains"` \| `"regex"` | How `message_match` is applied |
 | `tags` | array of strings | e.g. `["ai-suggested", "needs-review"]` |
-| `notes` | string | Rationale; shown in UI and audit trail |
+| `notes` | string | Rationale for creating the filter |
 | `created_by` | string | Set to your agent name |
 | `expires_at` | ISO-8601 datetime | Filter auto-retires after this time |
 
 **Constraints:**
-- `source_host` and `source_subnet` are mutually exclusive on one rule.
-- `destination` and `destination_subnet` are mutually exclusive on one rule.
-- At least one matching criterion must be present (`sid`, `source_host`,
-  `source_subnet`, `message_match`, etc.).
-- SID-only filters (no host/subnet) are blocked unless the engine is configured
-  with `ENGINE_ALLOW_SID_ONLY=true`.
+- `source_host` and `source_subnet` are mutually exclusive.
+- `destination` and `destination_subnet` are mutually exclusive.
+- SID-only filters (no host/subnet) require `ENGINE_ALLOW_SID_ONLY=true`.
 
-### Matching order (classifier specificity)
-
-Filters are evaluated most-specific-first.  First match wins.
+### Matching order (most specific wins)
 
 1. `source_host` + `sid` + destination + port/protocol
 2. `source_host` + `sid` + destination
@@ -288,46 +347,29 @@ Filters are evaluated most-specific-first.  First match wins.
 4. `sid` only (requires `ENGINE_ALLOW_SID_ONLY=true`)
 5. `message_match` (exact / contains / regex)
 
-### Lifecycle operations
+### Filter lifecycle endpoints
 
 | Call | Effect |
 |---|---|
-| `POST /filters/{id}/enable` | Make the filter active |
+| `POST /filters/{id}/enable` | Activate the filter |
 | `POST /filters/{id}/disable` | Pause without deleting |
-| `POST /filters/{id}/retire` | Soft-delete (excluded from classification; audit preserved) |
-| `POST /filters/{id}/unretire` | Restore to disabled for review |
+| `POST /filters/{id}/retire` | Soft-delete (audit rows preserved) |
 | `PUT /filters/{id}` | Update any field (same body schema as POST) |
 
 ---
 
-## Recommended Nightly Briefing Workflow
+## Recommended nightly briefing workflow
 
-1. `GET /stats/filters` — get 24h hit totals and top SIDs.
-2. `GET /filters` — load all active filters.  Cross-reference the top SIDs
-   against existing filters to find SIDs with no coverage.
-3. For each high-volume uncovered SID, grep the NDJSON archive
-   (`eve-YYYYMMDD.ndjson`) for sample events to assess whether the traffic
-   is benign noise or worth investigating.
-4. For each high-volume covered SID, call `GET /filters/{id}/matches` to
-   confirm the filter is catching what you expect.
-5. Flag any `severity: 1` (critical) events that are *not* covered by a hide
-   filter — these should be highlighted in the briefing regardless of volume.
-6. Note filters with `hit_count > 0` but `last_seen_at` more than 7 days ago
-   as potentially stale.
-7. For any filter you want to propose: call `POST /filters/preview` first,
-   then `POST /filters` with `enabled: false`.
-8. Write the briefing.  Include: summary stats, items requiring attention,
-   stale filter candidates, and a list of filters created (with their IDs).
+1. **Volume overview** — run `sum by (sid) (count_over_time({job="suricata"}[24h]))` and `sum by (action) (...)` against Loki to get total event counts and the tag/passthrough split.
 
----
+2. **Passthrough deep-dive** — query `{job="suricata", action="passthrough"}` for the last 24h. These events matched *no* filter at all and are your highest-interest items. Cluster by SID and source host.
 
-## Filter Action Safety Guidelines
+3. **Critical severity** — query `{job="suricata", severity="1"}`. Any severity-1 events should be explicitly addressed in the briefing regardless of volume.
 
-- Use `"tag"` by default.  `"hide"` permanently removes events from the
-  Grafana/Loki stream — only use it for traffic you have verified is benign.
-- When proposing a `"hide"` filter based on a single day's observation, set
-  `expires_at` to 30 days from now so it auto-retires if the pattern changes.
-- Add `notes` explaining what you observed, why you believe it is benign, and
-  what evidence would cause you to reconsider.
-- Never create a filter with `"allow"` action unless you understand that it
-  bypasses all subsequent rules for matching traffic.
+4. **High-volume tagged noise** — events with `action="tag"` that appear hundreds of times with the same SID and source host are candidates for upgrading to `hide` filters if they are confirmed benign.
+
+5. **New/novel signatures** — cross-reference SIDs seen in Loki against `GET /filters` to find SIDs with no existing filter coverage. These are the most likely candidates for new filter rules.
+
+6. **Filter suggestions** — for each proposed new filter: check with `GET /filters?sid=X`, preview with `POST /filters/preview`, then create with `POST /filters` (`enabled: false`).
+
+7. **Write the briefing** — include: event counts, passthrough anomalies, severity-1 findings, high-volume patterns, and a list of any filters created (with their IDs for human review and enabling).
