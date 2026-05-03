@@ -254,10 +254,67 @@ was tagged rather than hidden (or vice versa).
 
 ---
 
-## Creating new filters (suppressing noise from the Loki stream)
+## Creating and managing filters
 
-When the briefing identifies a high-volume pattern in Loki that is clearly
-benign, create a `hide` filter to remove it from the stream going forward.
+### Human approval required for all `hide` filters
+
+**Never create a `hide` filter with `"enabled": true`.** All `hide` filters
+must be created disabled and reviewed by the operator before activation.
+A `hide` filter permanently removes matching events from the Loki stream —
+an overly broad or incorrect rule will silently suppress real detections.
+
+`tag` filters may be created enabled immediately — they keep events visible
+and add no suppression risk.
+
+### Tag-first workflow (observe before suppressing)
+
+When you see a high-volume pattern that *might* be benign noise but you are
+not certain, use a `tag` filter as a holding state rather than going straight
+to `hide`:
+
+1. **Create a `tag` filter, enabled.** Events matching the pattern continue
+   to flow into Loki but are labeled `action=tag`, making them easy to query
+   separately and track in Grafana.
+2. **On subsequent nightly runs**, query Loki for that tagged pattern:
+   ```
+   {job="suricata", action="tag", sid="XXXX"}
+   sum by (host) (count_over_time({job="suricata", action="tag", sid="XXXX"}[24h]))
+   ```
+   Note any changes in volume, source hosts, or destinations.
+3. **Once confident the traffic is benign** (consistent pattern, known source,
+   no escalation in severity), propose upgrading the filter to `hide`:
+   ```
+   PUT /filters/{id}
+   Content-Type: application/json
+   X-API-Token: <token>
+
+   { "action": "hide", "enabled": false, "notes": "Observed for N days via tag filter — confirmed benign. Upgrading to hide pending review." }
+   ```
+   The `PUT` body uses the same schema as `POST /filters`. Setting
+   `enabled: false` returns it to the approval queue even if it was previously
+   enabled as a `tag` filter.
+
+### Network-wide SID firing — suggest rule suppression instead
+
+If a SID is generating events from **many different source hosts across
+multiple subnets** (not just one device), do **not** create a `hide` filter
+for each host or a broad subnet filter. Instead, flag it in the briefing as
+a candidate for **Suricata rule suppression**:
+
+> "SID XXXXX is firing from N distinct hosts across all observed subnets.
+> This signature may not be relevant to this network. Consider disabling or
+> suppressing the rule in OPNsense → Intrusion Detection → Rules rather than
+> creating per-host filters in this system."
+
+A filter in this engine only hides events after they are generated — it does
+not reduce IDS load or prevent the raw NDJSON from filling up. Disabling the
+rule in Suricata stops the alerts at the source.
+
+The threshold for this recommendation: if the same SID is seen from 3 or more
+distinct `/24` subnets, or from 5 or more distinct source IPs, prefer the
+rule-suppression suggestion over a filter.
+
+---
 
 ### Step 1 — check if a filter already exists
 
@@ -366,10 +423,12 @@ starts suppressing events.  Use `POST /filters/{id}/enable` to activate.
 
 3. **Critical severity** — query `{job="suricata", severity="1"}`. Any severity-1 events should be explicitly addressed in the briefing regardless of volume.
 
-4. **High-volume tagged noise** — events with `action="tag"` that appear hundreds of times with the same SID and source host are candidates for upgrading to `hide` filters if they are confirmed benign.
+4. **Review existing tagged patterns** — query `{job="suricata", action="tag"}` grouped by SID and host. For any tag filter that has now been observed for several days with a consistent, benign pattern, propose upgrading it to `hide` (disabled, pending operator approval) using `PUT /filters/{id}`.
 
-5. **New/novel signatures** — cross-reference SIDs seen in Loki against `GET /filters` to find SIDs with no existing filter coverage. These are the most likely candidates for new filter rules.
+5. **New/novel signatures** — cross-reference SIDs seen in Loki against `GET /filters` to find SIDs with no existing filter coverage. These are candidates for new `tag` filters to begin observation.
 
-6. **Filter suggestions** — for each proposed new filter: check with `GET /filters?sid=X`, preview with `POST /filters/preview`, then create with `POST /filters` (`enabled: false`).
+6. **Network-wide SID check** — for any high-volume SID, check how many distinct source hosts and subnets it is firing from. If it spans 3+ distinct `/24` subnets or 5+ source IPs, recommend Suricata rule suppression in OPNsense rather than a filter in this system.
 
-7. **Write the briefing** — include: event counts, passthrough anomalies, severity-1 findings, high-volume patterns, and a list of any filters created (with their IDs for human review and enabling).
+7. **Filter suggestions** — for each proposed new filter: check with `GET /filters?sid=X`, preview with `POST /filters/preview`, then create. Use `action=tag, enabled=true` to begin observation, or `action=hide, enabled=false` if the pattern is already well-understood and operator approval is expected.
+
+8. **Write the briefing** — include: event counts, passthrough anomalies, severity-1 findings, tag-filter upgrade candidates (with filter IDs for the operator to enable), new tag filters created, any rule-suppression recommendations, and any proposed `hide` filters awaiting approval.
