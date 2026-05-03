@@ -105,7 +105,7 @@ curl -s \
   --data-urlencode "start=$YESTERDAY" \
   --data-urlencode "end=$NOW" \
   --data-urlencode "limit=5000" \
-  --data-urlencode "direction=forward"
+  --data-urlencode "direction=backward"
 ```
 
 Response shape:
