@@ -27,7 +27,7 @@
       "gridPos": { "x": 0, "y": 0, "w": 24, "h": 3 },
       "options": {
         "mode": "markdown",
-        "content": "**Severity:** `${severity}` &nbsp;&nbsp; **SID:** `${sid}` &nbsp;&nbsp; **Signature:** `${signature}` &nbsp;&nbsp; **Dest Country:** `${dest_country}` &nbsp;&nbsp; **Src Country:** `${src_country}`\n\n[→ Create filter from current view](/filters/new?sid=${sid:raw}&message_match=${signature:raw}&match_mode=contains)"
+        "content": "**Severity:** `${severity}` &nbsp;&nbsp; **SID:** `${sid}` &nbsp;&nbsp; **Signature:** `${signature}` &nbsp;&nbsp; **Dest Country:** `${dest_country}` &nbsp;&nbsp; **Src Country:** `${src_country}`\n\n[→ Create filter from current view](/filters/new?sid=${sid:raw}&message_match=${signature:percentencode}&match_mode=contains)"
       },
       "fieldConfig": { "defaults": {}, "overrides": [] }
     },
