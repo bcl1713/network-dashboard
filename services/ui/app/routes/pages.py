@@ -50,10 +50,35 @@ async def filters_list(
     )
 
 
+_GRAFANA_WILDCARD = ".*"
+_VALID_MATCH_MODES = frozenset({"exact", "contains", "regex"})
+
+
 @router.get("/filters/new", response_class=HTMLResponse)
-async def filters_new(request: Request, from_event: str | None = Query(default=None)):
+async def filters_new(
+    request: Request,
+    from_event: str | None = Query(default=None),
+    sid: str | None = Query(default=None),
+    message_match: str | None = Query(default=None),
+    match_mode: str | None = Query(default=None),
+    source_host: str | None = Query(default=None),
+):
     engine = _engine(request)
     draft: dict[str, Any] = {"action": "tag", "match_mode": "exact", "enabled": True}
+    # Overlay query-param pre-fill (Grafana link or manual deep links).
+    # Skip Grafana's default wildcard ".*" and non-numeric SID strings.
+    if sid and sid != _GRAFANA_WILDCARD:
+        try:
+            draft["sid"] = int(sid)
+        except ValueError:
+            pass
+    if message_match and message_match != _GRAFANA_WILDCARD:
+        draft["message_match"] = message_match
+    if match_mode and match_mode in _VALID_MATCH_MODES:
+        draft["match_mode"] = match_mode
+    if source_host and source_host != _GRAFANA_WILDCARD:
+        draft["source_host"] = source_host
+    # from_event pre-fill runs second and overwrites the above for fields the engine provides.
     if from_event:
         try:
             event = await engine.get_event(from_event)
