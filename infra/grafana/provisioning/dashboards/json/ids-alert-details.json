@@ -24,10 +24,10 @@
       "type": "text",
       "title": "Active Filters",
       "id": 1,
-      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 2 },
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 3 },
       "options": {
         "mode": "markdown",
-        "content": "**Severity:** `${severity}` &nbsp;&nbsp; **SID:** `${sid}` &nbsp;&nbsp; **Signature:** `${signature}` &nbsp;&nbsp; **Dest Country:** `${dest_country}` &nbsp;&nbsp; **Src Country:** `${src_country}`"
+        "content": "**Severity:** `${severity}` &nbsp;&nbsp; **SID:** `${sid}` &nbsp;&nbsp; **Signature:** `${signature}` &nbsp;&nbsp; **Dest Country:** `${dest_country}` &nbsp;&nbsp; **Src Country:** `${src_country}`\n\n[→ Create filter from current view](/filters/new?sid=${sid:raw}&message_match=${signature:percentencode}&match_mode=contains)"
       },
       "fieldConfig": { "defaults": {}, "overrides": [] }
     },
@@ -35,7 +35,7 @@
       "type": "stat",
       "title": "Matching Events",
       "id": 2,
-      "gridPos": { "x": 0, "y": 2, "w": 4, "h": 3 },
+      "gridPos": { "x": 0, "y": 3, "w": 4, "h": 3 },
       "datasource": { "type": "loki", "uid": "Loki-Filtered" },
       "targets": [
         {
@@ -76,7 +76,7 @@
       "type": "table",
       "title": "Alert Events",
       "id": 3,
-      "gridPos": { "x": 0, "y": 5, "w": 24, "h": 18 },
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 18 },
       "datasource": { "type": "loki", "uid": "Loki-Filtered" },
       "targets": [
         {
@@ -91,7 +91,7 @@
           "options": {
             "source": "labels",
             "format": "json",
-            "replace": true
+            "replace": false
           }
         },
         {
@@ -285,6 +285,6 @@
   "timezone": "",
   "title": "IDS Alert Details",
   "uid": "ids-alert-details",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }
