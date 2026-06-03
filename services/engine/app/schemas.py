@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from contextlib import suppress
 from datetime import datetime
 from typing import Any, Literal
 
@@ -74,7 +75,7 @@ class FilterOut(FilterBase):
     def _coerce_tags(cls, data: Any) -> Any:
         # ORM returns tags as a JSON-encoded text column.
         if hasattr(data, "tags"):
-            obj = {c: getattr(data, c) for c in data.__table__.columns.keys()}
+            obj = {column.name: getattr(data, column.name) for column in data.__table__.columns}
             obj["enabled"] = bool(obj.get("enabled"))
             obj["retired"] = bool(obj.get("retired"))
             tags = obj.get("tags")
@@ -87,10 +88,8 @@ class FilterOut(FilterBase):
                 obj["tags"] = None
             return obj
         if isinstance(data, dict) and isinstance(data.get("tags"), str) and data["tags"]:
-            try:
+            with suppress(json.JSONDecodeError):
                 data["tags"] = json.loads(data["tags"])
-            except json.JSONDecodeError:
-                pass
         return data
 
 

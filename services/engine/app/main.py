@@ -12,7 +12,7 @@ from __future__ import annotations
 import asyncio
 import json
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from alembic import command
 from alembic.config import Config as AlembicConfig
@@ -23,8 +23,8 @@ from .classifier import Decision, classify, explain
 from .config import get_settings
 from .db import init_engine, session_scope
 from .eve import NormalizedEvent
-from .loki_client import LokiClient
 from .logging import configure_logging, get_logger
+from .loki_client import LokiClient
 from .models import Filter, FilterAudit
 from .retention import retention_loop
 from .ring_buffer import RingBuffer
@@ -77,7 +77,7 @@ def _build_on_match():
     def _on_match(event: NormalizedEvent, decision: Decision) -> None:
         if decision.filter_id is None:
             return
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         with session_scope() as session:
             session.execute(
                 update(Filter)
@@ -145,7 +145,7 @@ async def lifespan(app: FastAPI):
         stop_event.set()
         try:
             await asyncio.wait_for(retention_task, timeout=5)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             retention_task.cancel()
         await app.state.loki.aclose()
         log.info("engine.shutdown")

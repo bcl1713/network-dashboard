@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 
 def test_prune_only_removes_old_audit_rows(client, auth_headers, basic_event):
@@ -27,7 +27,7 @@ def test_prune_only_removes_old_audit_rows(client, auth_headers, basic_event):
     from app.db import session_scope
     from app.models import FilterAudit
 
-    old = datetime.now(tz=timezone.utc) - timedelta(days=60)
+    old = datetime.now(tz=UTC) - timedelta(days=60)
     with session_scope() as session:
         row = session.query(FilterAudit).first()
         row.matched_at = old.replace(tzinfo=None)

@@ -7,8 +7,8 @@ Used by:
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Iterable, Iterator
 from threading import RLock
-from typing import Iterable, Iterator
 
 from .eve import NormalizedEvent
 

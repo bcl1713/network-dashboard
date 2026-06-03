@@ -64,7 +64,7 @@ class Filter(Base):
     last_matched_event_id: Mapped[str | None] = mapped_column(String, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    audit_rows: Mapped[list["FilterAudit"]] = relationship(
+    audit_rows: Mapped[list[FilterAudit]] = relationship(
         "FilterAudit", back_populates="filter", cascade="all, delete-orphan", lazy="noload"
     )
 

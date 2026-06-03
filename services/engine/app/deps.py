@@ -10,7 +10,8 @@ from typing import TYPE_CHECKING
 
 from fastapi import Request
 
-from .config import Settings, get_settings as _get_settings
+from .config import Settings
+from .config import get_settings as _get_settings
 
 if TYPE_CHECKING:
     from .loki_client import LokiClient
@@ -21,9 +22,9 @@ def get_settings() -> Settings:
     return _get_settings()
 
 
-def get_ring(request: Request) -> "RingBuffer":
+def get_ring(request: Request) -> RingBuffer:
     return request.app.state.ring
 
 
-def get_loki(request: Request) -> "LokiClient":
+def get_loki(request: Request) -> LokiClient:
     return request.app.state.loki

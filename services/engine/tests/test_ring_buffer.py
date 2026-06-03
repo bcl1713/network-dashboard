@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.eve import NormalizedEvent
 from app.ring_buffer import RingBuffer
@@ -7,7 +7,7 @@ from app.ring_buffer import RingBuffer
 def _ev(eid: str) -> NormalizedEvent:
     return NormalizedEvent(
         event_id=eid,
-        timestamp=datetime.now(tz=timezone.utc),
+        timestamp=datetime.now(tz=UTC),
         event_type="alert",
         src_ip="10.0.0.1",
         src_port=1,

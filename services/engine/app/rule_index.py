@@ -5,8 +5,8 @@ each filter mutation so reads on the hot path don't open SQLite connections.
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
 from threading import RLock
-from typing import Iterable
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.eve import normalize
 
@@ -55,7 +55,7 @@ def test_normalize_falls_back_to_now_for_invalid_timestamp():
     payload = {"event_type": "alert", "timestamp": "not-a-date"}
     e = normalize(payload)
     assert e.timestamp.tzinfo is not None
-    assert (datetime.now(tz=timezone.utc) - e.timestamp).total_seconds() < 5
+    assert (datetime.now(tz=UTC) - e.timestamp).total_seconds() < 5
 
 
 def test_to_loki_labels_bounded(basic_event):

@@ -9,7 +9,7 @@ Retired filters keep their audit history until normal TTL cleanup removes it.
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import delete
 
@@ -23,7 +23,7 @@ log = get_logger(__name__)
 
 def prune_once(ttl_days: int) -> int:
     """Synchronous prune. Returns number of rows deleted."""
-    cutoff = datetime.now(tz=timezone.utc) - timedelta(days=ttl_days)
+    cutoff = datetime.now(tz=UTC) - timedelta(days=ttl_days)
     cutoff_str = cutoff.strftime("%Y-%m-%d %H:%M:%S")
     with session_scope() as session:
         result = session.execute(
@@ -45,5 +45,5 @@ async def retention_loop(settings: Settings, stop_event: asyncio.Event) -> None:
             log.error("retention.error", error=str(exc))
         try:
             await asyncio.wait_for(stop_event.wait(), timeout=interval)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             continue
