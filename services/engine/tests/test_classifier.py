@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from app.classifier import classify, explain
 from app.eve import NormalizedEvent
@@ -8,7 +8,7 @@ from app.models import Filter
 def _ev(**kw) -> NormalizedEvent:
     base = dict(
         event_id="abc",
-        timestamp=datetime.now(tz=timezone.utc),
+        timestamp=datetime.now(tz=UTC),
         event_type="alert",
         src_ip="10.10.50.42",
         src_port=51514,
@@ -139,7 +139,7 @@ def test_disabled_rules_skipped():
 
 def test_expired_rules_skipped():
     rule = _rule(source_host="10.10.50.42", sid=2027865, action="hide")
-    rule.expires_at = datetime.now(tz=timezone.utc) - timedelta(days=1)
+    rule.expires_at = datetime.now(tz=UTC) - timedelta(days=1)
     d = classify(_ev(), [rule])
     assert d.action == "passthrough"
 

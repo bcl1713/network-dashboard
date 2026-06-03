@@ -15,9 +15,9 @@ from __future__ import annotations
 
 import ipaddress
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Iterable
+from datetime import UTC, datetime
 
 from .eve import NormalizedEvent
 from .models import Filter
@@ -42,7 +42,7 @@ class ChainStep:
 
 
 def _now_utc() -> datetime:
-    return datetime.now(tz=timezone.utc)
+    return datetime.now(tz=UTC)
 
 
 def _is_active(rule: Filter, now: datetime | None = None) -> bool:
@@ -50,7 +50,7 @@ def _is_active(rule: Filter, now: datetime | None = None) -> bool:
         return False
     if rule.expires_at is not None:
         now = now or _now_utc()
-        ea = rule.expires_at if rule.expires_at.tzinfo else rule.expires_at.replace(tzinfo=timezone.utc)
+        ea = rule.expires_at if rule.expires_at.tzinfo else rule.expires_at.replace(tzinfo=UTC)
         if ea <= now:
             return False
     return True

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -16,7 +16,7 @@ def collect_stats(session: Session, *, top_n: int = 10) -> StatsResponse:
     ) or 0
     retired = session.scalar(select(func.count(Filter.id)).where(Filter.retired == 1)) or 0
 
-    cutoff = datetime.now(tz=timezone.utc) - timedelta(hours=24)
+    cutoff = datetime.now(tz=UTC) - timedelta(hours=24)
     cutoff_str = cutoff.strftime("%Y-%m-%d %H:%M:%S")
 
     hits_24h = session.scalar(

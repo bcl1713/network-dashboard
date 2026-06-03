@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from ..engine_client import EngineError
@@ -68,10 +69,8 @@ async def filters_new(
     # Overlay query-param pre-fill (Grafana link or manual deep links).
     # Skip Grafana's default wildcard ".*" and non-numeric SID strings.
     if sid and sid != _GRAFANA_WILDCARD:
-        try:
+        with suppress(ValueError):
             draft["sid"] = int(sid)
-        except ValueError:
-            pass
     if message_match and message_match != _GRAFANA_WILDCARD:
         draft["message_match"] = message_match
     if match_mode and match_mode in _VALID_MATCH_MODES:
