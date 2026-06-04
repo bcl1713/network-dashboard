@@ -96,12 +96,16 @@ restart and restore procedures.
 
 ## Development
 
+Prefer the top-level Makefile targets for routine development checks:
+
 ```sh
-cd services/engine && pip install -e .[dev] && pytest -q
-cd services/ui    && pip install -e .[dev] && pytest -q
+make test
 make lint
 make fmt
 ```
+
+These targets wrap the engine and UI checks so you can run the common test,
+lint, and formatting workflows from the repository root.
 
 ## License
 
